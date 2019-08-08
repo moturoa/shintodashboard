@@ -11,17 +11,28 @@ scatter_plot <- function(data,
   
   data$x <- data[,xvar]
   data$y <- data[,yvar]
-  data$g <- data[,groupvar]
-  if(!is.factor(data$g))data$g <- as.factor(data$g)
+  
+  if(!is.null(groupvar)){
+    data$g <- data[,groupvar]
+    if(!is.factor(data$g))data$g <- as.factor(data$g)
+  }
   
   if(is.null(xlab))xlab <- xvar
   if(is.null(ylab))ylab <- yvar
   if(is.null(glab))glab <- groupvar
   
-  ggplot(data, aes(x = x, y = y, col = g)) +
-    geom_point() + 
-    theme_minimal() +
-    labs(x = xlab, y = ylab, color = glab)
+  
+  if(!is.null(groupvar)){
+    ggplot(data, aes(x = x, y = y, col = g)) +
+      geom_point() + 
+      theme_minimal() +
+      labs(x = xlab, y = ylab, color = glab)
+  } else {
+    ggplot(data, aes(x = x, y = y)) +
+      geom_point() + 
+      theme_minimal() +
+      labs(x = xlab, y = ylab)
+  }
     
 }
 
@@ -32,7 +43,7 @@ grouped_barplot <- function(data,
                          yvar, 
                          statfun = "count",
                          groupvar = NULL,
-                         position = c("grouped", "stacked"),
+                         position = c("grouped", "stacked", "filled"),
                          xlab = NULL,
                          ylab = NULL,
                          glab = NULL){
@@ -43,7 +54,8 @@ grouped_barplot <- function(data,
   position <- match.arg(position)
   position <- switch(position,
                      grouped = position_dodge,
-                     stacked = position_fill)
+                     stacked = position_stack,
+                     fill = position_fill)
   
   if(!is.null(groupvar)){
     data$g <- data[,groupvar]
@@ -54,7 +66,7 @@ grouped_barplot <- function(data,
   }
 
   if(is.null(xlab))xlab <- xvar
-  if(is.null(ylab))ylab <- yvar
+  if(is.null(ylab))ylab <- glue("{statfun}({yvar})")
   if(is.null(glab))glab <- groupvar
   
   stat_fun <- get(statfun)
@@ -62,17 +74,28 @@ grouped_barplot <- function(data,
   
   if(is.null(groupvar)){
     
-    data_agg <- group_by(data, x) %>%
-      summarize(y = stat_fun(y))
+    if(statfun != "count"){
+      data_agg <- group_by(data, x, .drop = FALSE) %>%
+        summarize(y = stat_fun(y))
+    } else {
+      data_agg <- group_by(data, x, .drop = FALSE) %>%
+        summarize(y = n())
+    }
     
-    ggplot(data_agg, aes(x = x, y = y, .drop = FALSE)) +
+    ggplot(data_agg, aes(x = x, y = y)) +
       geom_bar(stat="identity", position = position()) + 
       theme_minimal() +
       labs(x = xlab, y = ylab) 
     } else {
         
-    data_agg <- group_by(data, x, g, .drop = FALSE) %>%
+      
+    if(statfun != "count"){
+      data_agg <- group_by(data, x, g, .drop = FALSE) %>%
         summarize(y = stat_fun(y))
+    } else {
+      data_agg <- group_by(data, x, g, .drop = FALSE) %>%
+        summarize(y = n())
+    }
       
     ggplot(data_agg, aes(x = x, y = y, fill = g)) +
       geom_bar(stat="identity", position = position()) + 
@@ -101,11 +124,14 @@ if(FALSE){
   
   
   scatter_plot(automobiles, "engine_volume", "fuel_efficiency", "cylinders")
-  
+  scatter_plot(automobiles, "engine_volume", "fuel_efficiency")
   
   grouped_barplot(data, "cylinders", "fuel_efficiency", statfun="mean")
   grouped_barplot(data, "cylinders", "fuel_efficiency", "origin", statfun="mean")
   
+  
+  grouped_barplot(data, "cylinders", "fuel_efficiency", "origin",statfun="n",
+                  position = "stacked")
   
   
   group_by(data, cylinders, origin) %>%

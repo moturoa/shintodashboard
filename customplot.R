@@ -1,9 +1,6 @@
 
 
-
-
-
-library(shiny)
+source("global.R")
 
 customplotUI <- function(id){
   
@@ -12,7 +9,9 @@ customplotUI <- function(id){
   tags$div(class = "col-sm-4", id = id,
            tags$div(class = "box cpbox",
                     tags$div(class = "box-body",
-                        actionButton(ns("close"), label=HTML("&times;"), class="closebox"),
+                        actionButton(ns("btn_close"), label=HTML("&times;"), class="closebox"),
+                        actionButton(ns("btn_edit"), label="", icon=icon("edit"), class="closebox"),
+                        actionButton(ns("btn_download"), label="", icon=icon("download"), class="closebox"),
                         plotOutput(ns("customplot"))
                     )
            )
@@ -21,23 +20,45 @@ customplotUI <- function(id){
 }
 
 
-customplot <- function(input, output, session, this_id, xvar, yvar, pch=19){
+customplot <- function(input, output, session, this_id, 
+                       plot_arguments
+                       ){
   
-  observe({
+  output$customplot <- renderPlot({
     
-    x <- mtcars[,xvar]
-    y <- mtcars[,yvar]
+    a <- plot_arguments
+    if(a$plottype == "Scatter"){
+      p <- scatter_plot(automobiles, 
+                        a$xvar, 
+                        a$yvar, 
+                        a$groupvar, 
+                        xlab=a$xlab, 
+                        ylab=a$ylab, 
+                        glab=a$glab)
+      print(p)
+    }
+    if(a$plottype == "Barplot"){
+      p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+                           statfun=a$statfun,
+                           xlab=a$xlab, 
+                           ylab=a$ylab, glab=a$glab)
+      print(p)
+    }
+    if(a$plottype == "Stacked barplot"){
+      p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+                           statfun=a$statfun,
+                           xlab=a$xlab, ylab=a$ylab, glab=a$glab,
+                      position = "stacked")
+      print(p)
+    }
     
-    output$customplot <- renderPlot({
-      plot(x,y, xlab=xvar, ylab=yvar, pch=pch)
-    }, width = 250, height = 250)
     
-  })
-  
-  observeEvent(input$close, {
-
-        removeUI(selector = paste0("#", this_id), session = session)
-  
+  }, width = 380, height = 280)
+    
+  observeEvent(input$btn_close, {
+    
+      removeUI(selector = paste0("#", this_id), session = session)
+    
   })
   
 }
@@ -47,16 +68,42 @@ ui <- fluidPage(
   includeCSS("www/style.css"),
   
   wellPanel(
-    
-    selectInput("xvar_newplot", label = "X variable", 
-                choices =  names(mtcars), selected = "wt"),
-    selectInput("yvar_newplot", label = "Y variable", 
-                choices =  names(mtcars), selected = "mpg"),
-    actionButton("btn_addplot", "Add plot")
+   fluidRow(
+    column(3,
+      varSelectizeInput("plot_xvar", label = "X-as variabele", 
+                  data = automobiles, selected = "engine_volume"),
+      varSelectizeInput("plot_yvar", label = "Y-as variabele", 
+                        data = automobiles, selected = "fuel_efficiency"),
+      checkboxInput("chk_usegroup", "Gebruik groep"),
+      varSelectizeInput("plot_groupvar", label = "Groep variabele", 
+                        data = automobiles, selected = "cylinders")
       
+    ),
+    column(3, 
+    
+           selectInput("plot_type", "Plot type", 
+                       choices = c("Scatter", "Barplot", "Stacked barplot")),
+           tags$p("Voor barplots select functie toe te passen op X en/of group variabele"),
+           selectInput("plot_stat", "Functie", 
+                       choices = c("mean","count","max", "sum"))
+           
+           ),
+    column(3,
+    
+           textInput("plot_xlab", "X-as label"),
+           textInput("plot_ylab", "Y-as label"),
+           textInput("plot_glab", "Groep label")
+                  
+    ),
+    column(3,
+           tags$br(),
+           tags$br(),
+           tags$br(),
+           actionButton("btn_addplot", "Add plot")
+    )
+   )
   ),
   
-  textOutput("btnclicked"),
   fluidRow(
      div(id="placeholder")
   )
@@ -67,25 +114,42 @@ server <- function(input, output, session){
   
   
   rv <- reactiveValues(
-    nclicked = 1
+    n_added = 1
   )
   
   # Auto-stop app on window close
   session$onSessionEnded(stopApp)
   
+  
   observeEvent(input$btn_addplot, {
     
-    id_ <- paste0("customplot", rv$nclicked)
+    id_ <- paste0("customplot", rv$n_added)
     
     insertUI(
       "#placeholder", where = "beforeEnd",
       ui = customplotUI(id_)
     )
     
-    callModule(customplot, id_, this_id = id_, session = session,
-               xvar = input$xvar_newplot, yvar = input$yvar_newplot)
+    make_null <- function(x){
+      if(x == "")x <- NULL
+      x
+    }
     
-    rv$nclicked <- rv$nclicked + 1
+    callModule(customplot, id_, this_id = id_, session = session,
+               
+               plot_arguments = list(
+                 plottype = as.character(input$plot_type),
+                 xvar = as.character(input$plot_xvar), 
+                 yvar = as.character(input$plot_yvar),
+                 groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
+                 xlab = make_null(input$plot_xlab),
+                 ylab = make_null(input$plot_ylab),
+                 glab = make_null(input$plot_glab),
+                 statfun = as.character(input$plot_stat)
+                )
+    )
+    
+    rv$n_added <- rv$n_added + 1
     
   })
   
