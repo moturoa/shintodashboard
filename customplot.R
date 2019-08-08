@@ -65,9 +65,10 @@ customplot <- function(input, output, session, this_id,
 
 
 ui <- fluidPage(
+  useShinyjs(),
   includeCSS("www/style.css"),
   
-  wellPanel(
+  wellPanel(id = "panel_controls",
    fluidRow(
     column(3,
       varSelectizeInput("plot_xvar", label = "X-as variabele", 
@@ -99,7 +100,10 @@ ui <- fluidPage(
            tags$br(),
            tags$br(),
            tags$br(),
-           actionButton("btn_addplot", "Add plot")
+           tags$br(),
+           tags$br(),
+           actionButton("btn_addplot", "Add plot"),
+           actionButton("btn_reset", "Reset", icon=icon("refresh"))
     )
    )
   ),
@@ -111,7 +115,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session){
-  
   
   rv <- reactiveValues(
     n_added = 1
@@ -153,6 +156,9 @@ server <- function(input, output, session){
     
   })
   
+  observeEvent(input$btn_reset, {
+    shinyjs::reset("panel_controls")
+  })
   
 }
 

@@ -4,6 +4,7 @@ library(lgrdata)
 library(shiny)
 library(dplyr)
 library(glue)
+library(shinyjs)
 
 data(automobiles)
 
