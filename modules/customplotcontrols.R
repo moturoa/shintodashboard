@@ -57,13 +57,15 @@ customplotcontrols <- function(input, output, session){
     n_added = 1
   )
   
+  ns <- session$ns
+  
   observeEvent(input$btn_addplot, {
     
     id_ <- paste0("customplot", rv$n_added)
     
     insertUI(
       "#placeholder", where = "beforeEnd",
-      ui = customplotUI(id_)
+      ui = customplotUI(ns(id_))
     )
     
     make_null <- function(x){
@@ -71,7 +73,7 @@ customplotcontrols <- function(input, output, session){
       x
     }
     
-    callModule(customplot, id_, this_id = id_, session = session,
+    callModule(customplot, id_, this_id = ns(id_), session = session,
                
                plot_arguments = list(
                  plottype = as.character(input$plot_type),

@@ -21,6 +21,8 @@ customplot <- function(input, output, session, this_id,
                        plot_arguments
 ){
   
+  ns <- session$ns
+  
   output$customplot_out <- renderPlot({
     
     a <- plot_arguments
@@ -60,13 +62,7 @@ customplot <- function(input, output, session, this_id,
   
   observeEvent(input$btn_edit, {
     
-    removeUI(selector = paste0("#", this_id), session = session)
-    insertUI(
-      "#placeholder", where = "beforeEnd",
-      ui = customplotUI(this_id)
-    )
-    
-    
+
   }) 
 }
 
