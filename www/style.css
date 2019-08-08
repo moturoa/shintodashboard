@@ -1,0 +1,11 @@
+.cpbox{
+  border: 1px solid darkgrey;
+  margin: 30px;
+  box-shadow: 5px 5px 5px 5px grey;
+  padding: 10px;
+  height: 350px;
+}
+
+.closebox{
+  border: 0;
+}
