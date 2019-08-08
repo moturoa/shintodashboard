@@ -9,9 +9,9 @@ customplotUI <- function(id){
   tags$div(class = "col-sm-4", id = id,
            tags$div(class = "box cpbox",
                     tags$div(class = "box-body",
-                        actionButton(ns("btn_close"), label=HTML("&times;"), class="closebox"),
-                        actionButton(ns("btn_edit"), label="", icon=icon("edit"), class="closebox"),
-                        actionButton(ns("btn_download"), label="", icon=icon("download"), class="closebox"),
+                        actionButton(ns("btn_close"), label=HTML("&times;"), class="plotbutton"),
+                        actionButton(ns("btn_edit"), label="", icon=icon("edit"), class="plotbutton"),
+                        actionButton(ns("btn_download"), label="", icon=icon("download"), class="plotbutton"),
                         plotOutput(ns("customplot"))
                     )
            )
@@ -60,7 +60,17 @@ customplot <- function(input, output, session, this_id,
       removeUI(selector = paste0("#", this_id), session = session)
     
   })
-  
+ 
+  observeEvent(input$btn_edit, {
+    
+    removeUI(selector = paste0("#", this_id), session = session)
+    insertUI(
+      "#placeholder", where = "beforeEnd",
+      ui = customplotUI(this_id)
+    )
+      
+    
+  }) 
 }
 
 
@@ -155,7 +165,7 @@ server <- function(input, output, session){
     rv$n_added <- rv$n_added + 1
     
   })
-  
+
   observeEvent(input$btn_reset, {
     shinyjs::reset("panel_controls")
   })
