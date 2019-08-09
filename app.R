@@ -1,7 +1,7 @@
 
 
 source("global.R")
-source("modules/customplot.R")
+source("R/functions.R")
 source("modules/customplotcontrols.R")
 
 ui <- fluidPage(

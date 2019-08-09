@@ -5,3 +5,33 @@ reorder_within <- function(fac, fac_within, level_within, decreasing=TRUE){
   factor(fac,levels=collist)
 }
 
+custom_plot <- function(plot_arguments){
+  
+  a <- plot_arguments
+  if(a$plottype == "Scatter"){
+    p <- scatter_plot(automobiles, 
+                      a$xvar, 
+                      a$yvar, 
+                      a$groupvar, 
+                      xlab=a$xlab, 
+                      ylab=a$ylab, 
+                      glab=a$glab)
+    print(p)
+  }
+  if(a$plottype == "Barplot"){
+    p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+                         statfun=a$statfun,
+                         xlab=a$xlab, 
+                         ylab=a$ylab, glab=a$glab)
+    print(p)
+  }
+  if(a$plottype == "Stacked barplot"){
+    p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+                         statfun=a$statfun,
+                         xlab=a$xlab, ylab=a$ylab, glab=a$glab,
+                         position = "stacked")
+    print(p)
+  }
+  
+  
+}

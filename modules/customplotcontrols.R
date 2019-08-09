@@ -44,6 +44,7 @@ customplotcontrolsUI <- function(id){
                 
               )
     ),
+    textOutput(ns("allids")),
     fluidRow(
       div(id="placeholder")
     )
@@ -53,47 +54,91 @@ customplotcontrolsUI <- function(id){
 
 customplotcontrols <- function(input, output, session){
   
+  jqui_sortable('#placeholder', options = list(opacity = 0.5))
+  
   rv <- reactiveValues(
-    n_added = 1
+    n_added = 1,
+    all_ids = NULL
   )
   
   ns <- session$ns
   
+  output$allids <- renderText({
+    paste(rv$all_ids)
+  })
+  
+  observeEvent(input$btn_reset, {
+    shinyjs::reset("panel_controls")
+  })
+  
   observeEvent(input$btn_addplot, {
     
-    id_ <- paste0("customplot", rv$n_added)
+    id_container <- ns(paste0("customplot", rv$n_added))
+    id_plot <- paste0(id_container, "_plot")
+    id_closebutton <- paste0(id_container,"_btn_close")
+    id_editbutton <- paste0(id_container,"_btn_edit")
+    id_downloadbutton <- paste0(id_container,"_btn_download")
     
     insertUI(
       "#placeholder", where = "beforeEnd",
-      ui = customplotUI(ns(id_))
+      
+      tags$div(class = "col-sm-4", id = id_container,
+               tags$div(class = "box cpbox",
+                        tags$div(class = "box-body",
+                                 actionButton(ns(id_closebutton), 
+                                              label=HTML("&times;"), class="plotbutton"),
+                                 actionButton(ns(id_editbutton), 
+                                              label="", icon=icon("edit"), class="plotbutton"),
+                                 actionButton(ns(id_downloadbutton), 
+                                              label="", icon=icon("download"), class="plotbutton"),
+                                 plotOutput(ns(id_plot))
+                        )
+               )
+      )
     )
+    
+    rv$all_ids <- c(rv$all_ids, id_container)
     
     make_null <- function(x){
       if(x == "")x <- NULL
       x
     }
     
-    callModule(customplot, id_, this_id = ns(id_), session = session,
-               
-               plot_arguments = list(
-                 plottype = as.character(input$plot_type),
-                 xvar = as.character(input$plot_xvar), 
-                 yvar = as.character(input$plot_yvar),
-                 groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
-                 xlab = make_null(input$plot_xlab),
-                 ylab = make_null(input$plot_ylab),
-                 glab = make_null(input$plot_glab),
-                 statfun = as.character(input$plot_stat)
-               )
-    )
+    output[[id_plot]] <- renderPlot({
+    
+      isolate(
+      custom_plot(plot_arguments = list(
+        plottype = as.character(input$plot_type),
+        xvar = as.character(input$plot_xvar), 
+        yvar = as.character(input$plot_yvar),
+        groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
+        xlab = make_null(input$plot_xlab),
+        ylab = make_null(input$plot_ylab),
+        glab = make_null(input$plot_glab),
+        statfun = as.character(input$plot_stat)
+      ))
+      )
+    },width = 380, height = 280)
+    
+    
+    observeEvent(input[[id_closebutton]], {
+      
+      removeUI(selector = paste0("#", id_container), session = session)
+      rv$all_ids <- rv$all_ids[-match(id_container, rv$all_ids)]
+      
+    })
+    
+    observeEvent(input[[id_editbutton]], {
+      
+      
+    }) 
+    
     
     rv$n_added <- rv$n_added + 1
     
   })
   
-  observeEvent(input$btn_reset, {
-    shinyjs::reset("panel_controls")
-  })
+
   
 }
 

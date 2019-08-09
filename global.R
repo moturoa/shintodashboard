@@ -5,6 +5,7 @@ library(shiny)
 library(dplyr)
 library(glue)
 library(shinyjs)
+library(shinyjqui)
 
 data(automobiles)
 
