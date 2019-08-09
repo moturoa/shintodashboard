@@ -107,18 +107,18 @@ customplotcontrols <- function(input, output, session){
     output[[id_plot]] <- renderPlot({
     
       isolate(
-      custom_plot(plot_arguments = list(
-        plottype = as.character(input$plot_type),
-        xvar = as.character(input$plot_xvar), 
-        yvar = as.character(input$plot_yvar),
-        groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
-        xlab = make_null(input$plot_xlab),
-        ylab = make_null(input$plot_ylab),
-        glab = make_null(input$plot_glab),
-        statfun = as.character(input$plot_stat)
-      ))
+        custom_plot(plot_arguments = list(
+          plottype = as.character(input$plot_type),
+          xvar = as.character(input$plot_xvar), 
+          yvar = as.character(input$plot_yvar),
+          groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
+          xlab = make_null(input$plot_xlab),
+          ylab = make_null(input$plot_ylab),
+          glab = make_null(input$plot_glab),
+          statfun = as.character(input$plot_stat)
+        ))
       )
-    },width = 380, height = 280)
+    }, width = 380, height = 280)
     
     
     observeEvent(input[[id_closebutton]], {
@@ -130,6 +130,21 @@ customplotcontrols <- function(input, output, session){
     
     observeEvent(input[[id_editbutton]], {
       
+      output[[id_plot]] <- renderPlot({
+        
+        isolate(
+          custom_plot(plot_arguments = list(
+            plottype = as.character(input$plot_type),
+            xvar = as.character(input$plot_xvar), 
+            yvar = as.character(input$plot_yvar),
+            groupvar = if(input$chk_usegroup)as.character(input$plot_groupvar) else NULL,
+            xlab = make_null(input$plot_xlab),
+            ylab = make_null(input$plot_ylab),
+            glab = make_null(input$plot_glab),
+            statfun = as.character(input$plot_stat)
+          ))
+        )
+      }, width = 380, height = 280)
       
     }) 
     
