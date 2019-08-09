@@ -9,9 +9,7 @@ ui <- fluidPage(
   
   includeCSS("www/style.css"),
   
-  customplotcontrolsUI("controls"),
-  actionButton("tst","Test"),
-  textOutput("txtout")
+  customplotcontrolsUI("controls")
   
 )
 

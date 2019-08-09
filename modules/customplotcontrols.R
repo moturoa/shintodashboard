@@ -147,7 +147,7 @@ customplotcontrols <- function(input, output, session){
         custom_plot(plot_arguments = plot_settings[[id_container]])
       )
       
-    }, width = 380, height = 280)
+    }, height = 280)
     
     
     observeEvent(input[[id_closebutton]], {
