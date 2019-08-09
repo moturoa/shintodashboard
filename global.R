@@ -12,5 +12,6 @@ data(automobiles)
 source("R/plot_wrappers2.R")
 
 
+current_ids <- c()
 plot_settings <- list()
 dashboards <- list()

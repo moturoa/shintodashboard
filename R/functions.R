@@ -5,6 +5,13 @@ reorder_within <- function(fac, fac_within, level_within, decreasing=TRUE){
   factor(fac,levels=collist)
 }
 
+random_word <- function(n = 6){
+  
+  x <- c(letters, LETTERS)
+  paste(sample(x,n), collapse="")
+  
+}
+
 custom_plot <- function(plot_arguments){
   
   a <- plot_arguments

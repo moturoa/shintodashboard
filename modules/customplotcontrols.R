@@ -61,11 +61,11 @@ customplotcontrols <- function(input, output, session){
   jqui_sortable('#placeholder', options = list(opacity = 0.5))
   
   rv <- reactiveValues(
-    n_added = 1,
     all_ids = NULL
   )
   
   ns <- session$ns
+
   
   observeEvent(input$btn_reset, {
     shinyjs::reset("panel_controls")
@@ -73,40 +73,53 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_save_dashboard, {
     
-    dashboards[[input$txt_dashboard_name]] <<- plot_settings[rv$all_ids]
+    dashboards[[input$txt_dashboard_name]] <<- plot_settings[current_ids]
     updateSelectInput(session, "select_dashboard", 
                       choices = names(dashboards))
   })
   
-  observeEvent(input$btn_dashboard_wissen, {
+  clear_dashboard <- function(){
     ids <- paste0("#", names(plot_settings))
     
     for(i in ids){
       removeUI(i)
     }
+    
+  }
+  
+  observeEvent(input$btn_dashboard_wissen, {
+    
+    clear_dashboard()
+    current_ids <<- c()
+    plot_settings <<- NULL
   })
   
   observeEvent(input$btn_load_dashboard,{
     
-    # input$select_dashboard
-    # 
-    # reconstruct_plot <- function(l){
-    #   
-    #   data <- get(l$data)
-    #   plot_fun <- get(l$plotfunction)
-    #   
-    #   do.call(l$plotfunction, c(list(data=data), l[c("xvar","yvar")]))
-    #   
-    # }    
+    clear_dashboard()
+    current_ids <<- c()
+    plot_settings <<- NULL
+    thisdash <- input$select_dashboard
+
+    out <- dashboards[[thisdash]]
+    
+    for(i in seq_along(out)){
+      add_plot(plotarguments = out[[i]])
+    }
+    
   })
   
-  observeEvent(input$btn_addplot, {
+  add_plot <- function(plotarguments = NULL){
     
-    id_container <- ns(paste0("customplot", rv$n_added))
+    unique_hash <- random_word(6)
+    
+    id_container <- ns(paste0("customplot", unique_hash))
     id_plot <- paste0(id_container, "_plot")
     id_closebutton <- paste0(id_container,"_btn_close")
     id_editbutton <- paste0(id_container,"_btn_edit")
     id_downloadbutton <- paste0(id_container,"_btn_download")
+    
+    current_ids <<- c(current_ids, id_container)
     
     insertUI(
       "#placeholder", where = "beforeEnd",
@@ -126,23 +139,24 @@ customplotcontrols <- function(input, output, session){
       )
     )
     
-    rv$all_ids <- c(rv$all_ids, id_container)
+    if(is.null(plotarguments)){
+      plot_settings[[id_container]] <<- list(
+        plottype = as.character(input$plot_type),
+        xvar = as.character(input$plot_xvar), 
+        yvar = as.character(input$plot_yvar),
+        usegroup = input$chk_usegroup,
+        groupvar = as.character(input$plot_groupvar),
+        xlab = input$plot_xlab,
+        ylab = input$plot_ylab,
+        glab = input$plot_glab,
+        statfun = input$plot_stat
+      ) 
+    } else {
+      plot_settings[[id_container]] <<- plotarguments
+    }
     
-    
-    plot_settings[[id_container]] <<- list(
-      plottype = as.character(input$plot_type),
-      xvar = as.character(input$plot_xvar), 
-      yvar = as.character(input$plot_yvar),
-      usegroup = input$chk_usegroup,
-      groupvar = as.character(input$plot_groupvar),
-      xlab = input$plot_xlab,
-      ylab = input$plot_ylab,
-      glab = input$plot_glab,
-      statfun = input$plot_stat
-    )
-
     output[[id_plot]] <- renderPlot({
-    
+      
       isolate(
         custom_plot(plot_arguments = plot_settings[[id_container]])
       )
@@ -154,31 +168,31 @@ customplotcontrols <- function(input, output, session){
       
       plot_settings[[id_container]] <<- NULL
       removeUI(selector = paste0("#", id_container), session = session)
-      rv$all_ids <- rv$all_ids[-match(id_container, rv$all_ids)]
+      current_ids <<- current_ids[-match(id_container, current_ids)]
       
     })
     
     
     update_inputs <- function(a, session){
-    
+      
       updateVarSelectizeInput(session, "plot_xvar", 
-                        selected = a$xvar)
+                              selected = a$xvar)
       
       updateVarSelectizeInput(session, "plot_yvar", 
-                        selected = a$yvar)
+                              selected = a$yvar)
       
       updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
       
       updateVarSelectizeInput(session, "plot_groupvar", 
-                        selected = a$groupvar)
+                              selected = a$groupvar)
       
       
       updateSelectInput(session, "plot_type", 
-                  selected = a$plottype)
+                        selected = a$plottype)
       
       updateSelectInput(session, "plot_stat", 
                         selected = a$statfun)
-  
+      
       updateTextInput(session, "plot_xlab", value = a$xlab)
       updateTextInput(session, "plot_ylab", value = a$ylab)
       updateTextInput(session, "plot_glab", value = a$glab)
@@ -214,11 +228,14 @@ customplotcontrols <- function(input, output, session){
       
     }) 
     
+  }
+  
+  observeEvent(input$btn_addplot, {
     
-    rv$n_added <- rv$n_added + 1
+    add_plot()
     
   })
-  
+    
 
   
 }
