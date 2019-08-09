@@ -12,3 +12,5 @@ data(automobiles)
 source("R/plot_wrappers2.R")
 
 
+plot_settings <- list()
+dashboards <- list()

@@ -8,6 +8,20 @@ reorder_within <- function(fac, fac_within, level_within, decreasing=TRUE){
 custom_plot <- function(plot_arguments){
   
   a <- plot_arguments
+  
+  
+  make_null <- function(x){
+    if(x == "")x <- NULL
+    x
+  }
+  
+  a$xlab <- make_null(a$xlab)
+  a$ylab <- make_null(a$ylab)
+  a$glab <- make_null(a$glab)
+  
+  if(!a$usegroup){
+    a$groupvar <- NULL
+  }
   if(a$plottype == "Scatter"){
     p <- scatter_plot(automobiles, 
                       a$xvar, 
