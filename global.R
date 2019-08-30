@@ -6,6 +6,8 @@ library(dplyr)
 library(glue)
 library(shinyjs)
 library(shinyjqui)
+library(shinydashboard)
+library(plotly)
 
 data(automobiles)
 

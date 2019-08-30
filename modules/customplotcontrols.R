@@ -3,10 +3,13 @@ customplotcontrolsUI <- function(id){
   
   ns <- NS(id)
   
-  tagList(
-    wellPanel(id = "panel_controls",
-              fluidRow(
-                column(3,
+  fluidRow(
+      column(4, id = "panel_controls",
+           
+            tabBox(width = 12,
+                tabPanel("Data",
+                
+                       
                        varSelectizeInput(ns("plot_xvar"), label = "X-as variabele", 
                                          data = automobiles, selected = "engine_volume"),
                        varSelectizeInput(ns("plot_yvar"), label = "Y-as variabele", 
@@ -16,7 +19,7 @@ customplotcontrolsUI <- function(id){
                                          data = automobiles, selected = "cylinders")
                        
                 ),
-                column(3, 
+                tabPanel("Plot type",
                        
                        selectInput(ns("plot_type"), "Plot type", 
                                    choices = c("Scatter", "Barplot", "Stacked barplot")),
@@ -25,19 +28,16 @@ customplotcontrolsUI <- function(id){
                                    choices = c("mean","count","max", "sum"))
                        
                 ),
-                column(3,
+                tabPanel("Labels",
                        textInput(ns("plot_xlab"), "X-as label"),
                        textInput(ns("plot_ylab"), "Y-as label"),
                        textInput(ns("plot_glab"), "Groep label")
                        
                 ),
-                column(3,
-                       tags$br(),
-                       tags$br(),
-                       tags$br(),
-                       tags$br(),
-                       tags$br(),
-                       actionButton(ns("btn_addplot"), "Add plot"),
+                tabPanel("Save",
+                       
+                       actionButton(ns("btn_addplot"), "Make plot"),
+                       tags$hr(),
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
                        actionButton(ns("btn_save_dashboard"), "Dashboard opslaan", icon=icon("save")),
                        selectInput(ns("select_dashboard"), "Dashboard database",
@@ -45,14 +45,17 @@ customplotcontrolsUI <- function(id){
                        actionButton(ns("btn_load_dashboard"), "Laden"),
                        actionButton(ns("btn_dashboard_wissen"), "Wissen")
                 )
-                
               )
-    ),
+      ),
+      column(8, 
+             fluidRow(
+              div(id="placeholder")
+            )  
+      )
     
-    fluidRow(
-      div(id="placeholder")
-    )
   )
+      
+   
 }
 
 
@@ -150,7 +153,9 @@ customplotcontrols <- function(input, output, session){
         ylab = input$plot_ylab,
         glab = input$plot_glab,
         statfun = input$plot_stat
-      ) 
+      )
+      
+      print(jsonlite::toJSON(plot_settings[[id_container]]))
     } else {
       plot_settings[[id_container]] <<- plotarguments
     }
