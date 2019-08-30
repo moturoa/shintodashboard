@@ -7,10 +7,11 @@ customplotcontrolsUI <- function(id){
   fluidRow(
       column(4, id = "panel_controls",
            
-            tabBox(width = 12, height = "500px", id = "controls_tab_box",
+            tabBox(width = 12, height = "800px", id = "controls_tab_box",
                 tabPanel("Data",
                 
-                       selectInput(ns("select_dataset"), "Dataset", choices = c("mtcars","iris")),
+                       selectInput(ns("select_dataset"), "Dataset", 
+                                   choices = c("automobiles","mtcars","iris")),
                        
                        selectInput(ns("plot_xvar"), label = "X-as variabele", 
                                    choices = "", selected = ""),
@@ -41,7 +42,10 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Labels",
                        textInput(ns("plot_xlab"), "X-as label"),
                        textInput(ns("plot_ylab"), "Y-as label"),
-                       textInput(ns("plot_glab"), "Groep label")
+                       textInput(ns("plot_glab"), "Groep label"),
+                       numericInput(ns("num_labelsize"), "Font size", min =8, max=20, value=12),
+                       numericInput(ns("num_labelmargin"), "Label margin", min = 0, max=10, value=2)
+                       
                        
                 ),
                 tabPanel("Colors",
@@ -60,9 +64,18 @@ customplotcontrolsUI <- function(id){
                                    "Color palette (canva.com) (4 colors)",
                                    choices = sort(names(canva_palettes)),
                                    selected = "", width = "300px")
-                      )
-                                
-                         
+                      ),
+                      tags$br(),
+                      actionButton(ns("btn_load_palette"), 
+                                   "Load", 
+                                   class = "btn btn-primary",
+                                   icon = icon("chevron-down", lib = "glyphicon")),
+                      tags$br(),
+                      lapply(1:6, function(i){
+                        colourInput(ns(paste0("sel_color",i)), "", value = brewer.pal(6, "Dark2")[i])
+                      })
+                      
+                    
                 ),
                 
                 tabPanel("Theme",
@@ -129,11 +142,9 @@ customplotcontrols <- function(input, output, session){
   
   read_plot_settings <- function(){
     
-    if(input$chk_colorbrewer){
-      pal <- brewer.pal(8, input$select_palette)
-    }
-    if(input$chk_canva){
-      pal <- canva_palettes[[input$select_palette2]]
+    pal <- c()
+    for(i in 1:6){
+      pal <- c(pal, input[[paste0("sel_color", i)]])
     }
     
     list(
@@ -149,16 +160,33 @@ customplotcontrols <- function(input, output, session){
       statfun = input$plot_stat,
       palette = pal,
       shape = input$scatter_shape,
-      theme = input$select_theme
+      theme = input$select_theme,
+      labelsize = input$num_labelsize,
+      labelmargin =input$num_labelmargin
     )
   }
 
+  observeEvent(input$btn_load_palette, {
+    
+    if(input$chk_colorbrewer){
+      pal <- brewer.pal(8, input$select_palette)
+    }
+    if(input$chk_canva){
+      pal <- canva_palettes[[input$select_palette2]]
+    }
+    
+    for(i in 1:6){
+      updateColourInput(session, paste0("sel_color",i), value = pal[i])
+    }
+      
+  })
+  
   
   observeEvent(input$select_dataset, {
     
     dataset <- get(input$select_dataset)
-    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = "")
-    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = "")
+    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = names(dataset)[1])
+    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = names(dataset)[2])
     updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = "")
     
   })
@@ -304,7 +332,6 @@ customplotcontrols <- function(input, output, session){
       
       updateSelectInput(session, "plot_groupvar", 
                               selected = a$groupvar)
-      
       
       updateSelectInput(session, "plot_type", 
                         selected = a$plottype)

@@ -16,3 +16,7 @@
 #controls_tab_box{
   margin: 10px;
 }
+
+.shiny-input-container[data-shiny-input-type = "colour"]{
+  margin-bottom: 2px !important;
+}

@@ -10,6 +10,7 @@ library(shinydashboard)
 library(plotly)
 library(RColorBrewer)
 library(ggthemes)
+library(colourpicker)
 
 data(automobiles)
 
