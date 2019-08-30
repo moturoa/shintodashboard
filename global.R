@@ -8,10 +8,12 @@ library(shinyjs)
 library(shinyjqui)
 library(shinydashboard)
 library(plotly)
+library(RColorBrewer)
+library(ggthemes)
 
 data(automobiles)
 
-source("R/plot_wrappers2.R")
+source("R/plot_wrappers.R")
 
 
 current_ids <- c()

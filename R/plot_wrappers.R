@@ -1,66 +1,148 @@
-stacked_barplot <- function(data, 
-                            group, 
-                            title="", 
-                            xlab="",
-                            ylab="",
-                            order=FALSE, 
-                            rotate_xlabs = FALSE, 
-                            print=TRUE,
-                            return_levs=FALSE){
+
+
+
+scatter_plot <- function(data, 
+                         xvar, 
+                         yvar, 
+                         groupvar = NULL,
+                         xlab = NULL,
+                         ylab = NULL,
+                         glab = NULL,
+                         shape=NULL,
+                         colour_=NULL){
   
-  data$group <- data[,group]
+  data$x <- data[,xvar]
+  data$y <- data[,yvar]
   
-  if(order){
-    data <- mutate(data, Group = reorder_within(group, gender, "F"))
+  if(!is.null(groupvar)){
+    data$g <- data[,groupvar]
+    if(!is.factor(data$g))data$g <- as.factor(data$g)
+  }
+  
+  if(is.null(xlab))xlab <- xvar
+  if(is.null(ylab))ylab <- yvar
+  if(is.null(glab))glab <- groupvar
+  
+  if(is.null(shape)){
+    shape_ <- 19
   } else {
-    data <- mutate(data, Group = factor(group))
+    shape_ <- switch(shape, 
+                    circles = 19,
+                    squares = 15
+                    )
   }
   
-  p <- ggplot(data, aes(x=Group, fill=gender)) +
-    geom_bar(stat="count", position=position_fill(reverse=TRUE)) +
-    theme_sage() +
-    labs(x=xlab, y="Gender Balance", title=title) +
-    scale_fill_manual(values=sage_cols) +
-    scale_y_continuous(labels = scales::percent, 
-                       breaks=c(0,0.25,0.5,0.75,1), 
-                       limits=c(0,1.01), expand=c(0, 0))
-  if(rotate_xlabs){
-    p <- p + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
-  }
   
-  if(print){
-    print(p)
-    if(return_levs)return(levels(data$Group))
+  if(!is.null(groupvar)){
+    ggplot(data, aes(x = x, y = y, col = g)) +
+      geom_point(shape = shape_) + 
+      labs(x = xlab, y = ylab, color = glab)
   } else {
-    return(p)
+    ggplot(data, aes(x = x, y = y)) +
+      geom_point(shape = shape_, colour = colour_) + 
+      labs(x = xlab, y = ylab)
   }
+    
 }
 
 
-grouped_barplot <- function(data, group, xlab="", ylab="Number of persons", 
-                            title="", order=FALSE, rotate_xlabs = FALSE, print=TRUE){
+
+grouped_barplot <- function(data, 
+                         xvar, 
+                         yvar, 
+                         statfun = "count",
+                         groupvar = NULL,
+                         position = c("grouped", "stacked", "filled"),
+                         xlab = NULL,
+                         ylab = NULL,
+                         glab = NULL){
   
-  data$group <- data[,group]
+  data$x <- data[,xvar]
+  data$y <- data[,yvar]
   
-  if(order){
-    data <- mutate(data, Group = reorder_within(group, gender, "F"))
+  position <- match.arg(position)
+  position <- switch(position,
+                     grouped = position_dodge,
+                     stacked = position_stack,
+                     fill = position_fill)
+  
+  if(!is.null(groupvar)){
+    data$g <- data[,groupvar]
+    if(!is.factor(data$g))data$g <- as.factor(data$g)
+    data <- data[complete.cases(data[,c("x","y","g")]),]
   } else {
-    data <- mutate(data, Group = group)
+    data <- data[complete.cases(data[,c("x","y")]),]
   }
+  if(!is.factor(data$x))data$x <- as.factor(data$x)
+
+  if(is.null(xlab))xlab <- xvar
+  if(is.null(ylab))ylab <- glue("{statfun}({yvar})")
+  if(is.null(glab))glab <- groupvar
   
-  p <- ggplot(data, aes(x=Group, fill=gender)) +
-    geom_bar(stat="count", position=position_dodge()) +
-    theme_sage() +
-    labs(x=xlab, y=ylab, title=title) +
-    scale_fill_manual(values=sage_cols)
+  stat_fun <- get(statfun)
   
-  if(rotate_xlabs){
-    p <- p + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
-  }
   
-  if(print){
-    print(p)
-  } else {
-    return(p)
-  }
+  if(is.null(groupvar)){
+    
+    if(statfun != "count"){
+      data_agg <- group_by(data, x, .drop = FALSE) %>%
+        summarize(y = stat_fun(y))
+    } else {
+      data_agg <- group_by(data, x, .drop = FALSE) %>%
+        summarize(y = n())
+    }
+    
+    ggplot(data_agg, aes(x = x, y = y, fill = x)) +
+      geom_bar(stat="identity", position = position()) + 
+      labs(x = xlab, y = ylab) 
+    } else {
+        
+      
+    if(statfun != "count"){
+      data_agg <- group_by(data, x, g, .drop = FALSE) %>%
+        summarize(y = stat_fun(y))
+    } else {
+      data_agg <- group_by(data, x, g, .drop = FALSE) %>%
+        summarize(y = n())
+    }
+      
+    ggplot(data_agg, aes(x = x, y = y, fill = g)) +
+      geom_bar(stat="identity", position = position()) + 
+      labs(x = xlab, y = ylab, fill = glab)
+        
+   }
+  
+}
+
+
+
+if(FALSE){
+  
+  library(dplyr)
+  library(ggplot2)
+  
+  library(lgrdata)
+  data(automobiles)
+  
+  data <- automobiles
+  
+  group_var <- "cylinders"
+  x_var <- "engine_volume"
+  y_var <- "fuel_efficiency"
+  
+  
+  scatter_plot(automobiles, "engine_volume", "fuel_efficiency", "cylinders")
+  scatter_plot(automobiles, "engine_volume", "fuel_efficiency")
+  
+  grouped_barplot(data, "cylinders", "fuel_efficiency", statfun="mean")
+  grouped_barplot(data, "cylinders", "fuel_efficiency", "origin", statfun="mean")
+  
+  
+  grouped_barplot(data, "cylinders", "fuel_efficiency", "origin",statfun="n",
+                  position = "stacked")
+  
+  
+  group_by(data, cylinders, origin) %>%
+    summarize(y = mean(fuel_efficiency, na.rm=T))
+  
 }

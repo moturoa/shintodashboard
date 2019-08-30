@@ -7,7 +7,7 @@ customplotcontrolsUI <- function(id){
   fluidRow(
       column(4, id = "panel_controls",
            
-            tabBox(width = 12,
+            tabBox(width = 12, height = "500px", id = "controls_tab_box",
                 tabPanel("Data",
                 
                        selectInput(ns("select_dataset"), "Dataset", choices = c("mtcars","iris")),
@@ -26,6 +26,13 @@ customplotcontrolsUI <- function(id){
                        selectInput(ns("plot_type"), "Plot type", 
                                    choices = c("Scatter", "Barplot", "Stacked barplot")),
                        shinyjs::hidden(
+                         
+                         selectInput(ns("scatter_shape"), "Markers", 
+                                     choices = c("circles","squares"))
+                         
+                       ),
+                       
+                       shinyjs::hidden(
                         selectInput(ns("plot_stat"), "Functie", 
                                    choices = c("mean","count","max", "sum"))
                        )
@@ -37,19 +44,64 @@ customplotcontrolsUI <- function(id){
                        textInput(ns("plot_glab"), "Groep label")
                        
                 ),
-                tabPanel("Save",
+                tabPanel("Colors",
+                      
+                      side_by_side(
+                       checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
+                       selectInput(ns("select_palette"), 
+                                   "Color palette (Color Brewer) (>8 colors)",
+                                   choices = rownames(brewer.pal.info), 
+                                   selected = "Dark2", width = "300px")
+                      ),
+                      tags$br(),
+                      side_by_side(
+                        checkboxInput(ns("chk_canva"), "", value = FALSE, width = "60px"),
+                        selectInput(ns("select_palette2"),
+                                   "Color palette (canva.com) (4 colors)",
+                                   choices = sort(names(canva_palettes)),
+                                   selected = "", width = "300px")
+                      )
+                                
+                         
+                ),
+                
+                tabPanel("Theme",
+                
+                         selectInput(ns("select_theme"),
+                                     "Select ggplot2 theme",
+                                     choices = c("theme_minimal","theme_bw","theme_classic",
+                                                 "theme_linedraw","theme_light",
+                                                 "theme_base","theme_calc","theme_clean","theme_economist",
+                                                 "theme_economist_white","theme_excel","theme_few",
+                                                 "theme_fivethirtyeight","theme_foundation",
+                                                 "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
+                                     
+                                  
+                         
+                ),
+                tabPanel("Dashboard",
                        
-                       actionButton(ns("btn_addplot"), "Make plot"),
-                       shinyjs::hidden(actionButton(ns("btn_updateplot"), "Update plot")),
-                       tags$hr(),
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
+                       tags$hr(),
                        actionButton(ns("btn_save_dashboard"), "Dashboard opslaan", icon=icon("save")),
                        selectInput(ns("select_dashboard"), "Dashboard database",
                                    choices = names(dashboards)),
                        actionButton(ns("btn_load_dashboard"), "Laden"),
                        actionButton(ns("btn_dashboard_wissen"), "Wissen")
                 )
+              ),
+            
+              tags$br(),
+              tags$br(),
+              tags$hr(),
+              actionButton(ns("btn_addplot"), "Make plot", class = "btn btn-primary", 
+                           icon = icon("plus", lib = "glyphicon")),
+              shinyjs::hidden(
+                actionButton(ns("btn_updateplot"), "Update plot", class = "btn btn-primary", 
+                             icon = icon("refresh", lib = "glyphicon"))
               )
+    
+            
       ),
       column(8, 
              fluidRow(
@@ -69,25 +121,66 @@ customplotcontrols <- function(input, output, session){
   
   rv <- reactiveValues(
     all_ids = NULL,
-    dataset = NULL,
     current_id_container = NULL,
     current_id_plot = NULL
   )
   
   ns <- session$ns
+  
+  read_plot_settings <- function(){
+    
+    if(input$chk_colorbrewer){
+      pal <- brewer.pal(8, input$select_palette)
+    }
+    if(input$chk_canva){
+      pal <- canva_palettes[[input$select_palette2]]
+    }
+    
+    list(
+      dataset = input$select_dataset,
+      plottype = as.character(input$plot_type),
+      xvar = as.character(input$plot_xvar),
+      yvar = as.character(input$plot_yvar),
+      usegroup = input$chk_usegroup,
+      groupvar = as.character(input$plot_groupvar),
+      xlab = input$plot_xlab,
+      ylab = input$plot_ylab,
+      glab = input$plot_glab,
+      statfun = input$plot_stat,
+      palette = pal,
+      shape = input$scatter_shape,
+      theme = input$select_theme
+    )
+  }
 
   
   observeEvent(input$select_dataset, {
     
-    rv$dataset <- get(input$select_dataset)
-    updateSelectInput(session, "plot_xvar", choices = names(rv$dataset), selected = "")
-    updateSelectInput(session, "plot_yvar", choices = names(rv$dataset), selected = "")
-    updateSelectInput(session, "plot_groupvar", choices = names(rv$dataset), selected = "")
+    dataset <- get(input$select_dataset)
+    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = "")
+    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = "")
+    updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = "")
     
   })
   
   observeEvent(input$btn_reset, {
     shinyjs::reset("panel_controls")
+    updateSelectInput(session, "plot_xvar", selected = "")
+    updateSelectInput(session, "plot_yvar", selected = "")
+    updateSelectInput(session, "plot_groupvar", selected = "")
+  })
+  
+  observeEvent(input$chk_colorbrewer, {
+    if(as.logical(input$chk_colorbrewer)){
+      updateCheckboxInput(session, "chk_canva", value = FALSE)
+    }
+  })
+  
+  observeEvent(input$chk_canva, {
+    
+    if(as.logical(input$chk_canva)){
+      updateCheckboxInput(session, "chk_colorbrewer", value = FALSE)
+    }
   })
   
   observeEvent(input$btn_save_dashboard, {
@@ -111,6 +204,7 @@ customplotcontrols <- function(input, output, session){
     clear_dashboard()
     current_ids <<- c()
     plot_settings <<- NULL
+    
   })
   
   observeEvent(input$btn_load_dashboard,{
@@ -132,9 +226,11 @@ customplotcontrols <- function(input, output, session){
     
     if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
       shinyjs::show("plot_stat")
+      shinyjs::hide("scatter_shape")
     }
     if(input$plot_type == "Scatter"){
       shinyjs::hide("plot_stat")
+      shinyjs::show("scatter_shape")
     }
     
   })
@@ -168,20 +264,9 @@ customplotcontrols <- function(input, output, session){
     )
     
     if(is.null(plotarguments)){
-      plot_settings[[id_container]] <<- list(
-        dataset = input$select_dataset,
-        plottype = as.character(input$plot_type),
-        xvar = as.character(input$plot_xvar), 
-        yvar = as.character(input$plot_yvar),
-        usegroup = input$chk_usegroup,
-        groupvar = as.character(input$plot_groupvar),
-        xlab = input$plot_xlab,
-        ylab = input$plot_ylab,
-        glab = input$plot_glab,
-        statfun = input$plot_stat
-      )
+      plot_settings[[id_container]] <<- read_plot_settings()
       
-      print(jsonlite::toJSON(plot_settings[[id_container]]))
+      #print(jsonlite::toJSON(plot_settings[[id_container]]))
     } else {
       plot_settings[[id_container]] <<- plotarguments
     }
@@ -189,7 +274,7 @@ customplotcontrols <- function(input, output, session){
     output[[id_plot]] <- renderPlot({
       
       isolate(
-        custom_plot(plot_arguments = plot_settings[[id_container]])
+        custom_plot(plot_settings[[id_container]])
       )
       
     }, height = 280)
@@ -236,15 +321,12 @@ customplotcontrols <- function(input, output, session){
 
     
     observeEvent(input[[id_editbutton]], {
-      
 
       update_inputs(plot_settings[[id_container]], session)
       rv$current_id_container <- id_container
       rv$current_id_plot <- id_plot
       
       shinyjs::show("btn_updateplot")
-        
-
       
     })
     
@@ -252,6 +334,8 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_addplot, {
     
+    req(input$plot_xvar)
+    req(input$plot_yvar)
     add_plot()
     
   })
@@ -259,26 +343,13 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_updateplot, {
     
-    args <- isolate(list(
-      dataset = input$select_dataset,
-      plottype = as.character(input$plot_type),
-      xvar = as.character(input$plot_xvar),
-      yvar = as.character(input$plot_yvar),
-      usegroup = input$chk_usegroup,
-      groupvar = as.character(input$plot_groupvar),
-      xlab = input$plot_xlab,
-      ylab = input$plot_ylab,
-      glab = input$plot_glab,
-      statfun = input$plot_stat
-    ))
-    
-    
+    args <- read_plot_settings()
     plot_settings[[rv$current_id_container]] <<- args
     
     output[[rv$current_id_plot]] <- renderPlot({
       
       isolate(
-        custom_plot(plot_arguments = args)
+        custom_plot(args)
       )
     }, height = 280)
     

@@ -12,11 +12,32 @@ random_word <- function(n = 6){
   
 }
 
-custom_plot <- function(plot_arguments){
+side_by_side <- function(...){
   
-  a <- plot_arguments
+  mc <- list(...)
+  lapply(mc, function(x){
+    
+    tags$div(style="display: inline-block;", x)  
+    
+  })
+  
+}
+
+
+side_by_side(
+  checkboxInput("chk_colorbrewer", "Use", value = TRUE), 
+  selectInput("select_palette", 
+              "Color palette (Color Brewer) (>8 colors)",
+              choices = rownames(brewer.pal.info), 
+              selected = "Set3", width = "150px")
+)
+
+custom_plot <- function(a){
   
   dataset <- get(a$dataset)
+  pal <- a$palette
+  
+  theme <- get(a$theme)
   
   make_null <- function(x){
     if(x == "")x <- NULL
@@ -37,23 +58,30 @@ custom_plot <- function(plot_arguments){
                       a$groupvar, 
                       xlab=a$xlab, 
                       ylab=a$ylab, 
-                      glab=a$glab)
-    print(p)
+                      glab=a$glab,
+                      shape = a$shape,
+                      colour_ = pal[1])
+    
   }
   if(a$plottype == "Barplot"){
     p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
                          statfun=a$statfun,
                          xlab=a$xlab, 
                          ylab=a$ylab, glab=a$glab)
-    print(p)
+
   }
   if(a$plottype == "Stacked barplot"){
     p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
                          statfun=a$statfun,
                          xlab=a$xlab, ylab=a$ylab, glab=a$glab,
                          position = "stacked")
-    print(p)
+    
   }
   
+  p <- tryCatch(p + scale_fill_manual(values = pal), error = p)
+  p <- tryCatch(p + scale_color_manual(values = pal), error = p)
+
+  p <- p + theme()
   
+print(p)
 }
