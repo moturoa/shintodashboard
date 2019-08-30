@@ -3,6 +3,7 @@ customplotcontrolsUI <- function(id){
   
   ns <- NS(id)
   
+  
   fluidRow(
       column(4, id = "panel_controls",
            
