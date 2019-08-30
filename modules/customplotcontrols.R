@@ -10,23 +10,25 @@ customplotcontrolsUI <- function(id){
             tabBox(width = 12,
                 tabPanel("Data",
                 
+                       selectInput(ns("select_dataset"), "Dataset", choices = c("mtcars","iris")),
                        
-                       varSelectizeInput(ns("plot_xvar"), label = "X-as variabele", 
-                                         data = automobiles, selected = "engine_volume"),
-                       varSelectizeInput(ns("plot_yvar"), label = "Y-as variabele", 
-                                         data = automobiles, selected = "fuel_efficiency"),
+                       selectInput(ns("plot_xvar"), label = "X-as variabele", 
+                                   choices = "", selected = ""),
+                       selectInput(ns("plot_yvar"), label = "Y-as variabele", 
+                                         choices = "", selected = ""),
                        checkboxInput(ns("chk_usegroup"), "Gebruik groep"),
-                       varSelectizeInput(ns("plot_groupvar"), label = "Groep variabele", 
-                                         data = automobiles, selected = "cylinders")
+                       selectInput(ns("plot_groupvar"), label = "Groep variabele", 
+                                         choices = "", selected = "")
                        
                 ),
                 tabPanel("Plot type",
                        
                        selectInput(ns("plot_type"), "Plot type", 
                                    choices = c("Scatter", "Barplot", "Stacked barplot")),
-                       tags$p("Voor barplots select functie toe te passen op X en/of group variabele"),
-                       selectInput(ns("plot_stat"), "Functie", 
+                       shinyjs::hidden(
+                        selectInput(ns("plot_stat"), "Functie", 
                                    choices = c("mean","count","max", "sum"))
+                       )
                        
                 ),
                 tabPanel("Labels",
@@ -38,6 +40,7 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Save",
                        
                        actionButton(ns("btn_addplot"), "Make plot"),
+                       shinyjs::hidden(actionButton(ns("btn_updateplot"), "Update plot")),
                        tags$hr(),
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
                        actionButton(ns("btn_save_dashboard"), "Dashboard opslaan", icon=icon("save")),
@@ -65,11 +68,23 @@ customplotcontrols <- function(input, output, session){
   jqui_sortable('#placeholder', options = list(opacity = 0.5))
   
   rv <- reactiveValues(
-    all_ids = NULL
+    all_ids = NULL,
+    dataset = NULL,
+    current_id_container = NULL,
+    current_id_plot = NULL
   )
   
   ns <- session$ns
 
+  
+  observeEvent(input$select_dataset, {
+    
+    rv$dataset <- get(input$select_dataset)
+    updateSelectInput(session, "plot_xvar", choices = names(rv$dataset), selected = "")
+    updateSelectInput(session, "plot_yvar", choices = names(rv$dataset), selected = "")
+    updateSelectInput(session, "plot_groupvar", choices = names(rv$dataset), selected = "")
+    
+  })
   
   observeEvent(input$btn_reset, {
     shinyjs::reset("panel_controls")
@@ -113,11 +128,20 @@ customplotcontrols <- function(input, output, session){
     
   })
   
+  observeEvent(input$plot_type, {
+    
+    if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
+      shinyjs::show("plot_stat")
+    }
+    if(input$plot_type == "Scatter"){
+      shinyjs::hide("plot_stat")
+    }
+    
+  })
+  
   add_plot <- function(plotarguments = NULL){
     
-    unique_hash <- random_word(6)
-    
-    id_container <- ns(paste0("customplot", unique_hash))
+    id_container <- ns(paste0("customplot", random_word(6)))
     id_plot <- paste0(id_container, "_plot")
     id_closebutton <- paste0(id_container,"_btn_close")
     id_editbutton <- paste0(id_container,"_btn_edit")
@@ -128,7 +152,7 @@ customplotcontrols <- function(input, output, session){
     insertUI(
       "#placeholder", where = "beforeEnd",
       
-      tags$div(class = "col-sm-4", id = id_container,
+      tags$div(id = id_container,  class = "col-sm-4", 
                tags$div(class = "box cpbox",
                         tags$div(class = "box-body",
                                  actionButton(ns(id_closebutton), 
@@ -145,6 +169,7 @@ customplotcontrols <- function(input, output, session){
     
     if(is.null(plotarguments)){
       plot_settings[[id_container]] <<- list(
+        dataset = input$select_dataset,
         plottype = as.character(input$plot_type),
         xvar = as.character(input$plot_xvar), 
         yvar = as.character(input$plot_yvar),
@@ -181,15 +206,18 @@ customplotcontrols <- function(input, output, session){
     
     update_inputs <- function(a, session){
       
-      updateVarSelectizeInput(session, "plot_xvar", 
+      updateSelectInput(session, "select_data", 
+                        selected = a$dataset)
+      
+      updateSelectInput(session, "plot_xvar", 
                               selected = a$xvar)
       
-      updateVarSelectizeInput(session, "plot_yvar", 
+      updateSelectInput(session, "plot_yvar", 
                               selected = a$yvar)
       
       updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
       
-      updateVarSelectizeInput(session, "plot_groupvar", 
+      updateSelectInput(session, "plot_groupvar", 
                               selected = a$groupvar)
       
       
@@ -205,40 +233,54 @@ customplotcontrols <- function(input, output, session){
       
     }
     
-    shinyjs::onclick(id_plot,  {
-      update_inputs(plot_settings[[id_container]], session)
-    })
+
     
     observeEvent(input[[id_editbutton]], {
       
-      args <- isolate(list(
-        plottype = as.character(input$plot_type),
-        xvar = as.character(input$plot_xvar), 
-        yvar = as.character(input$plot_yvar),
-        usegroup = input$chk_usegroup,
-        groupvar = as.character(input$plot_groupvar),
-        xlab = input$plot_xlab,
-        ylab = input$plot_ylab,
-        glab = input$plot_glab,
-        statfun = input$plot_stat
-      ))
+
+      update_inputs(plot_settings[[id_container]], session)
+      rv$current_id_container <- id_container
+      rv$current_id_plot <- id_plot
       
-      plot_settings[[id_container]] <<- args
-      
-      output[[id_plot]] <- renderPlot({
+      shinyjs::show("btn_updateplot")
         
-        isolate(
-          custom_plot(plot_arguments = args)
-        )
-      }, width = 380, height = 280)
+
       
-    }) 
+    })
     
   }
   
   observeEvent(input$btn_addplot, {
     
     add_plot()
+    
+  })
+  
+  
+  observeEvent(input$btn_updateplot, {
+    
+    args <- isolate(list(
+      dataset = input$select_dataset,
+      plottype = as.character(input$plot_type),
+      xvar = as.character(input$plot_xvar),
+      yvar = as.character(input$plot_yvar),
+      usegroup = input$chk_usegroup,
+      groupvar = as.character(input$plot_groupvar),
+      xlab = input$plot_xlab,
+      ylab = input$plot_ylab,
+      glab = input$plot_glab,
+      statfun = input$plot_stat
+    ))
+    
+    
+    plot_settings[[rv$current_id_container]] <<- args
+    
+    output[[rv$current_id_plot]] <- renderPlot({
+      
+      isolate(
+        custom_plot(plot_arguments = args)
+      )
+    }, height = 280)
     
   })
     

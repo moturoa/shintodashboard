@@ -16,6 +16,7 @@ custom_plot <- function(plot_arguments){
   
   a <- plot_arguments
   
+  dataset <- get(a$dataset)
   
   make_null <- function(x){
     if(x == "")x <- NULL
@@ -30,7 +31,7 @@ custom_plot <- function(plot_arguments){
     a$groupvar <- NULL
   }
   if(a$plottype == "Scatter"){
-    p <- scatter_plot(automobiles, 
+    p <- scatter_plot(dataset, 
                       a$xvar, 
                       a$yvar, 
                       a$groupvar, 
@@ -40,14 +41,14 @@ custom_plot <- function(plot_arguments){
     print(p)
   }
   if(a$plottype == "Barplot"){
-    p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+    p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
                          statfun=a$statfun,
                          xlab=a$xlab, 
                          ylab=a$ylab, glab=a$glab)
     print(p)
   }
   if(a$plottype == "Stacked barplot"){
-    p <- grouped_barplot(automobiles, a$xvar, a$yvar, a$groupvar, 
+    p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
                          statfun=a$statfun,
                          xlab=a$xlab, ylab=a$ylab, glab=a$glab,
                          position = "stacked")
