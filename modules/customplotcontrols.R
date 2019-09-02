@@ -11,13 +11,21 @@ customplotcontrolsUI <- function(id){
                 
                        selectInput(ns("select_dataset"), "Dataset", 
                                    choices = c("woning_productie","automobiles","mtcars","iris")),
-                       selectInput(ns("plot_xvar"), label = "X-as variabele", 
+                       
+                       side_by_side(
+                        selectInput(ns("plot_xvar"), label = "X Variable", 
                                    choices = "", selected = ""),
+                        checkboxInput(ns("chk_factor_x"), "Force factor", value = FALSE, width="50px")
+                       ),
                        tags$br(),
-                       selectInput(ns("plot_yvar"), label = "Y-as variabele", 
-                                         choices = "", selected = ""),
-                       checkboxInput(ns("chk_usegroup"), "Gebruik groep"),
-                       selectInput(ns("plot_groupvar"), label = "Groep variabele", 
+                       side_by_side(
+                         selectInput(ns("plot_yvar"), label = "Y Variable", 
+                                           choices = "", selected = ""),
+                         checkboxInput(ns("chk_factor_y"), "Force factor", value = FALSE, width="50px")
+                       ),
+                       tags$br(),
+                       checkboxInput(ns("chk_usegroup"), "Use grouping"),
+                       selectInput(ns("plot_groupvar"), label = "Grouping Variable", 
                                          choices = "", selected = "")
 
                 ),       
@@ -44,9 +52,9 @@ customplotcontrolsUI <- function(id){
                        
                 ),
                 tabPanel("Labels",
-                       textInput(ns("plot_xlab"), "X-as label"),
-                       textInput(ns("plot_ylab"), "Y-as label"),
-                       textInput(ns("plot_glab"), "Groep label"),
+                       textInput(ns("plot_xlab"), "X-axis label"),
+                       textInput(ns("plot_ylab"), "Y-axis label"),
+                       textInput(ns("plot_glab"), "Group label"),
                        numericInput(ns("num_labelsize"), "Font size", min =8, max=20, value=12),
                        numericInput(ns("num_labelmargin"), "Label margin", min = 0, max=10, value=2)
                        
@@ -100,11 +108,11 @@ customplotcontrolsUI <- function(id){
                        
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
                        tags$hr(),
-                       actionButton(ns("btn_save_dashboard"), "Dashboard opslaan", icon=icon("save")),
+                       actionButton(ns("btn_save_dashboard"), "Save Dashboard", icon=icon("save")),
                        selectInput(ns("select_dashboard"), "Dashboard database",
                                    choices = list_dashboards()),
-                       actionButton(ns("btn_load_dashboard"), "Laden"),
-                       actionButton(ns("btn_dashboard_wissen"), "Wissen")
+                       actionButton(ns("btn_load_dashboard"), "Load"),
+                       actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard")
                 )
               ),
             
@@ -156,6 +164,8 @@ customplotcontrols <- function(input, output, session){
       dataset = input$select_dataset,
       plottype = as.character(input$plot_type),
       xvar = as.character(input$plot_xvar),
+      factor_x = input$chk_factor_x,
+      factor_y = input$chk_factor_y,
       yvar = as.character(input$plot_yvar),
       usegroup = input$chk_usegroup,
       groupvar = as.character(input$plot_groupvar),
@@ -407,9 +417,9 @@ customplotcontrols <- function(input, output, session){
         
       dataset <- get(input$select_dataset)
 
-      make_controls <- function(data, label, idbase="filter"){
+      make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
         data <- data[!is.na(data)]
-        if(is.numeric(data)){
+        if(!force_factor && is.numeric(data)){
           tagList(
             h4(label),
             side_by_side(
@@ -427,9 +437,9 @@ customplotcontrols <- function(input, output, session){
       }
       
       tagList(
-        make_controls(dataset[[input$plot_xvar]], "X variable", idbase="filterx"),
-        make_controls(dataset[[input$plot_yvar]], "Y variable", idbase="filtery"),
-        make_controls(dataset[[input$plot_groupvar]], "Group variable", idbase="filterg")
+        make_controls(dataset[[input$plot_xvar]], "X variable", idbase="filterx", force_factor = input$chk_factor_x),
+        make_controls(dataset[[input$plot_yvar]], "Y variable", idbase="filtery", force_factor = input$chk_factor_y),
+        make_controls(dataset[[input$plot_groupvar]], "Group variable", idbase="filterg", force_factor = TRUE)
       )
     
         

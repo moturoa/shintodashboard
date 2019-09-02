@@ -9,6 +9,13 @@ custom_plot <- function(a){
   
   dataset <- get(a$dataset)
   
+  if(a$factor_x){
+    dataset[,a$xvar] <- as.factor(dataset[,a$xvar])
+  }
+  if(a$factor_y){
+    dataset[,a$yvar] <- as.factor(dataset[,a$yvar])
+  }
+  
   apply_filter <- function(data, column, f){
     
     if(is_empty(column))return(data)
