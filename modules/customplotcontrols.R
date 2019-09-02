@@ -78,14 +78,27 @@ customplotcontrolsUI <- function(id){
                                    selected = "", width = "300px")
                       ),
                       tags$br(),
-                      actionButton(ns("btn_load_palette"), 
+                      side_by_side(
+                        actionButton(ns("btn_load_palette"), 
                                    "Load", 
                                    class = "btn btn-primary",
                                    icon = icon("chevron-down", lib = "glyphicon")),
+                        tags$br(),
+                        numericInput(ns("num_start_palette"), "Start at",
+                                     value = 1, min=1, max=12, step=1, width="100px")
+                      ),
+                      tags$hr(),
+                      
+                      lapply(1:12, function(i){  
+                        
+                        div(style="width: 150px; display: inline-block;", 
+                          colourInput(ns(paste0("sel_color",i)), as.character(i), 
+                                      value = gplots::rich.colors(12)[i])
+                        )
+                        
+                      }),
                       tags$br(),
-                      lapply(1:6, function(i){
-                        colourInput(ns(paste0("sel_color",i)), "", value = brewer.pal(6, "Dark2")[i])
-                      })
+                      actionButton(ns("btn_erase_palette"), "Erase", icon = icon("eraser"))
                       
                     
                 ),
@@ -156,7 +169,7 @@ customplotcontrols <- function(input, output, session){
   read_plot_settings <- function(){
     
     pal <- c()
-    for(i in 1:6){
+    for(i in 1:12){
       pal <- c(pal, input[[paste0("sel_color", i)]])
     }
     
@@ -193,10 +206,19 @@ customplotcontrols <- function(input, output, session){
       pal <- canva_palettes[[input$select_palette2]]
     }
     
-    for(i in 1:6){
-      updateColourInput(session, paste0("sel_color",i), value = pal[i])
+    for(i in seq_along(pal)){
+      updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
     }
       
+  })
+  
+  observeEvent(input$btn_erase_palette, {
+    
+    for(i in 1:12){
+      updateColourInput(session, paste0("sel_color",i), value = "white")
+    }
+
+    
   })
   
   
@@ -387,6 +409,9 @@ customplotcontrols <- function(input, output, session){
       updateNumericInput(session, "num_labelsize", value = a$labelsize)
       updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
       
+      for(i in 1:12){
+        updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
+      }
     }
     
     observeEvent(input[[id_editbutton]], {
