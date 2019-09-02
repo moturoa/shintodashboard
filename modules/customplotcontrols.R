@@ -3,7 +3,6 @@ customplotcontrolsUI <- function(id){
   
   ns <- NS(id)
   
-  
   fluidRow(
       column(4, id = "panel_controls",
            
@@ -11,16 +10,21 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Data",
                 
                        selectInput(ns("select_dataset"), "Dataset", 
-                                   choices = c("automobiles","mtcars","iris")),
-                       
+                                   choices = c("woning_productie","automobiles","mtcars","iris")),
                        selectInput(ns("plot_xvar"), label = "X-as variabele", 
                                    choices = "", selected = ""),
+                       tags$br(),
                        selectInput(ns("plot_yvar"), label = "Y-as variabele", 
                                          choices = "", selected = ""),
                        checkboxInput(ns("chk_usegroup"), "Gebruik groep"),
                        selectInput(ns("plot_groupvar"), label = "Groep variabele", 
                                          choices = "", selected = "")
-                       
+
+                ),       
+                tabPanel("Filter",
+                  
+                   uiOutput(ns("filter_controls"))
+                         
                 ),
                 tabPanel("Plot type",
                        
@@ -163,7 +167,10 @@ customplotcontrols <- function(input, output, session){
       shape = input$scatter_shape,
       theme = input$select_theme,
       labelsize = input$num_labelsize,
-      labelmargin =input$num_labelmargin
+      labelmargin =input$num_labelmargin,
+      filters = list(input$filterx1, input$filterx2, input$filterx3, 
+                     input$filtery1, input$filtery2, input$filtery3, 
+                     input$filterg1, input$filterg2, input$filterg3)
     )
   }
 
@@ -330,7 +337,6 @@ customplotcontrols <- function(input, output, session){
       updateSelectInput(session, "plot_yvar", 
                               selected = a$yvar)
       
-      
       updateSelectInput(session, "plot_groupvar", 
                               selected = a$groupvar)
 
@@ -339,9 +345,27 @@ customplotcontrols <- function(input, output, session){
         updateCheckboxInput(session, "chk_usegroup",value = FALSE)
       }
       
+      update_filter <- function(id,i,numeric){
+        if(!is.null(input[[id]])){
+          if(numeric){
+            updateNumericInput(session, id, value = a$filters[i])
+          } else {
+            updateSelectInput(session, id, selected = a$filters[i])
+          }
+        }
+      }
+      fs <- c("filterx1", "filterx2", "filterx3", 
+                     "filtery1", "filtery2", "filtery3", 
+                     "filterg1", "filterg2", "filterg3")
+      type <- rep(c(TRUE,TRUE,FALSE),3)
+      for(i in seq_along(fs)){
+        update_filter(fs[i], i, type[i])
+      }
             
       updateSelectInput(session, "plot_type", 
                         selected = a$plottype)
+      updateSelectInput(session, "scatter_shape", 
+                        selected = a$shape)
       
       updateSelectInput(session, "plot_stat", 
                         selected = a$statfun)
@@ -349,6 +373,9 @@ customplotcontrols <- function(input, output, session){
       updateTextInput(session, "plot_xlab", value = a$xlab)
       updateTextInput(session, "plot_ylab", value = a$ylab)
       updateTextInput(session, "plot_glab", value = a$glab)
+     
+      updateNumericInput(session, "num_labelsize", value = a$labelsize)
+      updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
       
     }
     
@@ -374,7 +401,41 @@ customplotcontrols <- function(input, output, session){
     }
     
   })
-  
+
+
+  output$filter_controls <- renderUI({
+        
+      dataset <- get(input$select_dataset)
+
+      make_controls <- function(data, label, idbase="filter"){
+        data <- data[!is.na(data)]
+        if(is.numeric(data)){
+          tagList(
+            h4(label),
+            side_by_side(
+              numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width="100px"),
+              numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width="100px")
+            ),
+            br()
+          ) 
+        } else {
+          tagList(
+            h4(label),
+            selectInput(session$ns(glue("{idbase}3")), "Choices", choices = sort(unique(data)), multiple=TRUE)
+          )
+        }
+      }
+      
+      tagList(
+        make_controls(dataset[[input$plot_xvar]], "X variable", idbase="filterx"),
+        make_controls(dataset[[input$plot_yvar]], "Y variable", idbase="filtery"),
+        make_controls(dataset[[input$plot_groupvar]], "Group variable", idbase="filterg")
+      )
+    
+        
+  })
+
+
   
   observeEvent(input$btn_updateplot, {
     

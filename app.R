@@ -7,7 +7,6 @@ source("modules/customplotcontrols.R")
 
 ui <- fluidPage(
   useShinyjs(),
-  
   includeCSS("www/style.css"),
   
   customplotcontrolsUI("controls")

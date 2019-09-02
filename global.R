@@ -13,6 +13,7 @@ library(ggthemes)
 library(colourpicker)
 
 data(automobiles)
+woning_productie <- read.csv("data/woningproductie_df.csv")
 
 source("R/plot_wrappers.R")
 

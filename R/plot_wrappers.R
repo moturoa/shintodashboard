@@ -8,6 +8,25 @@
 custom_plot <- function(a){
   
   dataset <- get(a$dataset)
+  
+  apply_filter <- function(data, column, f){
+    
+    if(is_empty(column))return(data)
+    if(is.numeric(data[,column])){
+      if(is.null(f[[1]]) | is.null(f[[2]]))return(data)
+      data <- filter(data, !!sym(column) >= f[[1]], !!sym(column) <= f[[2]])
+    } else {
+      if(is.null(f[[3]]))return(data)
+      data <- filter(data, !!sym(column) %in% f[[3]])
+    }
+  
+  return(data)  
+  }
+  
+  dataset <- apply_filter(dataset, a$xvar, a$filters[1:3]) %>% 
+    apply_filter(a$yvar, a$filters[4:6]) %>%
+    apply_filter(a$groupvar, a$filters[7:9])
+  
   pal <- a$palette
   
   theme <- get(a$theme)
@@ -54,8 +73,8 @@ custom_plot <- function(a){
   if(is_empty(a$groupvar) & a$plottype == "Scatter"){
     pal <- rep(pal[1], nrow(dataset))
   }
-  p <- p + scale_fill_manual(values = pal) + 
-    scale_color_manual(values = pal)
+  p <- p + scale_fill_manual(values = rep(pal,100)) + 
+    scale_color_manual(values = rep(pal,100))
   
   p <- p + 
     theme(base_size = a$labelsize) +
