@@ -18,56 +18,71 @@ library(ggthemes)
 source("../R/plot_wrappers.R")
 source("../R/functions.R")
 
-dash <- readRDS("../cache/dashboards.rds")[[1]]
+
+# Config
+dash <- readRDS("../cache/dashboards.rds")[["dashboard1"]]
+widget_size <- list(width = 400, height = 400, margin = 10, padding = 25)
+
 
 
 ui <- dashboardPage(
     dashboardHeader(),
     dashboardSidebar(),
     dashboardBody(
-      fluidRow(
-        div(id="placeholder")
-      ) 
+      includeCSS("www/style.css"),
+      
+    uiOutput("static_dashboard")
+      
     )
 )
   
 server <- function(input, output, session) {
-    session$onSessionEnded(stopApp)
+    
+  session$onSessionEnded(stopApp)
   
-  
+  output$static_dashboard <- renderUI({
+    
     add_plot <- function(plotarguments){
     
       id_container <- paste0("customplot", random_word(6))
       id_plot <- paste0(id_container, "_plot")
 
-      insertUI(
-        "#placeholder", where = "beforeEnd",
-        
-        withTags(
-          div(id = id_container,  class = "col-sm-4", 
-                 div(class = "box cpbox",
-                        div(class = "box-body",
-                             plotOutput(id_plot)
-                          )
-                 )
-          )
-        )
-        
+      out <- withTags(
+          div(class = "cpbox", style = glue("width: {widget_size$width}px; height: {widget_size$height}px;"),
+             
+              div(class = "cpbox-plot", style = glue("padding: {widget_size$padding}px"),
+                 plotOutput(id_plot, 
+                            width = widget_size$width - widget_size$padding*2, 
+                            height = widget_size$height - widget_size$padding*2)
+              )
+             
+            )
       )
-      
+
       output[[id_plot]] <- renderPlot({
-        
-        print(plotarguments$plottype)
-        custom_plot(plotarguments)
-        
-      }, height = 280)
+       
+          custom_plot(plotarguments)
       
+      })
+      
+    return(out)
     }
   
     
-    lapply(seq_along(dash), function(i){
+    plots <- lapply(seq_along(dash), function(i){
       add_plot(plotarguments = dash[[i]])
     })
+    
+    plots$cellArgs <- list(
+      style = glue("
+        width: auto;
+        height: auto;
+        margin: {widget_size$margin}px;
+        "))
+    
+    do.call(flowLayout, plots)
+    
+  })
     
 }
 
