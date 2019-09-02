@@ -98,7 +98,7 @@ customplotcontrolsUI <- function(id){
                        tags$hr(),
                        actionButton(ns("btn_save_dashboard"), "Dashboard opslaan", icon=icon("save")),
                        selectInput(ns("select_dashboard"), "Dashboard database",
-                                   choices = names(dashboards)),
+                                   choices = list_dashboards()),
                        actionButton(ns("btn_load_dashboard"), "Laden"),
                        actionButton(ns("btn_dashboard_wissen"), "Wissen")
                 )
@@ -112,7 +112,8 @@ customplotcontrolsUI <- function(id){
               shinyjs::hidden(
                 actionButton(ns("btn_updateplot"), "Update plot", class = "btn btn-primary", 
                              icon = icon("refresh", lib = "glyphicon"))
-              )
+              ),
+              textOutput(ns("txt_info"))
     
             
       ),
@@ -185,8 +186,8 @@ customplotcontrols <- function(input, output, session){
   observeEvent(input$select_dataset, {
     
     dataset <- get(input$select_dataset)
-    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = names(dataset)[1])
-    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = names(dataset)[2])
+    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = names(dataset)[4])
+    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = names(dataset)[5])
     updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = "")
     
   })
@@ -213,9 +214,10 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_save_dashboard, {
     
-    dashboards[[input$txt_dashboard_name]] <<- plot_settings[current_ids]
+    save_dashboard(plot_settings[current_ids], input$txt_dashboard_name)
+    
     updateSelectInput(session, "select_dashboard", 
-                      choices = names(dashboards))
+                      choices = list_dashboards())
   })
   
   clear_dashboard <- function(){
@@ -242,7 +244,7 @@ customplotcontrols <- function(input, output, session){
     plot_settings <<- NULL
     thisdash <- input$select_dashboard
 
-    out <- dashboards[[thisdash]]
+    out <- load_dashboard(thisdash)
     
     for(i in seq_along(out)){
       add_plot(plotarguments = out[[i]])
@@ -328,11 +330,16 @@ customplotcontrols <- function(input, output, session){
       updateSelectInput(session, "plot_yvar", 
                               selected = a$yvar)
       
-      updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
       
       updateSelectInput(session, "plot_groupvar", 
                               selected = a$groupvar)
+
+      updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
+      if(a$groupvar == ""){
+        updateCheckboxInput(session, "chk_usegroup",value = FALSE)
+      }
       
+            
       updateSelectInput(session, "plot_type", 
                         selected = a$plottype)
       
@@ -344,8 +351,6 @@ customplotcontrols <- function(input, output, session){
       updateTextInput(session, "plot_glab", value = a$glab)
       
     }
-    
-
     
     observeEvent(input[[id_editbutton]], {
 
@@ -361,9 +366,12 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_addplot, {
     
-    req(input$plot_xvar)
-    req(input$plot_yvar)
-    add_plot()
+    if(is_empty(input$plot_xvar) | is_empty(input$plot_yvar)){
+      output$txt_info <- renderText({"First Select X and Y variables"})
+    } else {
+      add_plot()  
+      shinyjs::hide("btn_updateplot")
+    }
     
   })
   

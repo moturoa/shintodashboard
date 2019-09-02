@@ -12,6 +12,10 @@ random_word <- function(n = 6){
   
 }
 
+is_empty <- function(x){
+  is.null(x) || x == ""
+}
+
 side_by_side <- function(...){
   
   mc <- list(...)
@@ -32,59 +36,35 @@ side_by_side(
               selected = "Set3", width = "150px")
 )
 
-custom_plot <- function(a){
-  
-  dataset <- get(a$dataset)
-  pal <- a$palette
-  
-  theme <- get(a$theme)
-  
-  make_null <- function(x){
-    if(x == "")x <- NULL
-    x
-  }
-  
-  a$xlab <- make_null(a$xlab)
-  a$ylab <- make_null(a$ylab)
-  a$glab <- make_null(a$glab)
-  
-  if(!a$usegroup){
-    a$groupvar <- NULL
-  }
-  if(a$plottype == "Scatter"){
-    p <- scatter_plot(dataset, 
-                      a$xvar, 
-                      a$yvar, 
-                      a$groupvar, 
-                      xlab=a$xlab, 
-                      ylab=a$ylab, 
-                      glab=a$glab,
-                      shape = a$shape,
-                      colour_ = pal[1])
-    
-  }
-  if(a$plottype == "Barplot"){
-    p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
-                         statfun=a$statfun,
-                         xlab=a$xlab, 
-                         ylab=a$ylab, glab=a$glab)
 
-  }
-  if(a$plottype == "Stacked barplot"){
-    p <- grouped_barplot(dataset, a$xvar, a$yvar, a$groupvar, 
-                         statfun=a$statfun,
-                         xlab=a$xlab, ylab=a$ylab, glab=a$glab,
-                         position = "stacked")
-    
+save_dashboard <- function(dashboard, name){
+  
+  fn <- "cache/dashboards.rds"
+  if(file.exists(fn)){
+    dash <- readRDS(fn)
+    dash[[name]] <- dashboard
+  } else {
+    dash <- list(dashboard)
+    names(dash) <- name
   }
   
-  p <- tryCatch(p + scale_fill_manual(values = pal), error = p)
-  p <- tryCatch(p + scale_color_manual(values = pal), error = p)
-
-  p <- p + 
-    theme(base_size = a$labelsize) +
-    ggplot2::theme(axis.title.x = element_text(margin = margin(t = a$labelmargin, r=0,b=0,l=0)),
-                   axis.title.y = element_text(margin = margin(t = 0, r=a$labelmargin, b=0,l=0)))
+  saveRDS(dash, fn)
   
-print(p)
 }
+
+load_dashboard <- function(id){
+  readRDS("cache/dashboards.rds")[[id]]
+}
+
+list_dashboards <- function(){
+  fn <- "cache/dashboards.rds"
+  if(!file.exists(fn))return("")
+  names(readRDS("cache/dashboards.rds"))
+}
+
+
+
+
+
+
+

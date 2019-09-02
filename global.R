@@ -19,4 +19,3 @@ source("R/plot_wrappers.R")
 
 current_ids <- c()
 plot_settings <- list()
-dashboards <- list()
