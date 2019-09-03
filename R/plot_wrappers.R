@@ -86,7 +86,9 @@ custom_plot <- function(a){
   p <- p + 
     theme(base_size = a$labelsize) +
     ggplot2::theme(axis.title.x = element_text(margin = margin(t = a$labelmargin, r=0,b=0,l=0)),
-                   axis.title.y = element_text(margin = margin(t = 0, r=a$labelmargin, b=0,l=0)))
+                   axis.title.y = element_text(margin = margin(t = 0, r=a$labelmargin, b=0,l=0)),
+                   axis.text.x=element_text(angle = as.numeric(a$labelanglex)),
+                   axis.text.y=element_text(angle = as.numeric(a$labelangley)))
   
   print(p)
 }

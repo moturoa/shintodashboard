@@ -66,7 +66,18 @@ customplotcontrolsUI <- function(id){
                                     min =8, max=20, value=12),
                        numericInput(ns("num_labelmargin"),
                                     label_tooltip("Label margin","Space between axis and axis labels"),
-                                    min = 0, max=10, value=2)
+                                    min = 0, max=10, value=2),
+                       side_by_side(
+                         selectInput(ns("sel_labelanglex"), 
+                                     "Rotation X",
+                                     choices = c(0,90), width = "148px"),
+                         selectInput(ns("sel_labelangley"), 
+                                     label_tooltip("Rotation Y",
+                                                   "Axis label rotation. Select 90 for labels perpendicular to axis"),
+                                     choices = c(0,90), width = "148px")
+                       ),
+                       tags$br()
+                       
                        
                        
                 ),
@@ -208,6 +219,8 @@ customplotcontrols <- function(input, output, session){
       theme = input$select_theme,
       labelsize = input$num_labelsize,
       labelmargin =input$num_labelmargin,
+      labelanglex =  input$sel_labelanglex,
+      labelangley =  input$sel_labelangley,
       filters = list(input$filterx1, input$filterx2, input$filterx3, 
                      input$filtery1, input$filtery2, input$filtery3, 
                      input$filterg1, input$filterg2, input$filterg3)
