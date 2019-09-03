@@ -13,6 +13,11 @@
   padding: 20px;
 }
 
+span[data-toggle = "tooltip"]{
+  color: #1982C6;
+  font-size: 0.9em;
+}
+
 #controls_tab_box{
   margin: 10px;
 }

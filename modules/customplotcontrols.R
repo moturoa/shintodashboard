@@ -6,27 +6,32 @@ customplotcontrolsUI <- function(id){
   fluidRow(
       column(4, id = "panel_controls",
            
-            tabBox(width = 12, height = "800px", id = "controls_tab_box",
+            tabsetPanel( id = "controls_tab_box", type = "pills",
                 tabPanel("Data",
                 
                        selectInput(ns("select_dataset"), "Dataset", 
                                    choices = c("woning_productie","automobiles","mtcars","iris")),
                        
                        side_by_side(
-                        selectInput(ns("plot_xvar"), label = "X Variable", 
+                        selectInput(ns("plot_xvar"), 
+                                    label = label_tooltip("X Variable", "Select variable to plot along the X-axis"),
                                    choices = "", selected = ""),
                         checkboxInput(ns("chk_factor_x"), "Force factor", value = FALSE, width="50px")
                        ),
                        tags$br(),
                        side_by_side(
-                         selectInput(ns("plot_yvar"), label = "Y Variable", 
-                                           choices = "", selected = ""),
-                         checkboxInput(ns("chk_factor_y"), "Force factor", value = FALSE, width="50px")
+                         selectInput(ns("plot_yvar"), 
+                                     label = label_tooltip("Y Variable", "Select variable to plot along the X-axis"),
+                                     choices = "", selected = ""),
+                         checkboxInput(ns("chk_factor_y"), 
+                                       "Force factor",
+                                        value = FALSE, width="50px")
                        ),
                        tags$br(),
                        checkboxInput(ns("chk_usegroup"), "Use grouping"),
-                       selectInput(ns("plot_groupvar"), label = "Grouping Variable", 
-                                         choices = "", selected = "")
+                       selectInput(ns("plot_groupvar"), 
+                                   label = label_tooltip("Grouping Variable", "Select variable for colors or bar segments"),
+                                   choices = "", selected = "")
 
                 ),       
                 tabPanel("Filter",
@@ -46,17 +51,22 @@ customplotcontrolsUI <- function(id){
                        ),
                        
                        shinyjs::hidden(
-                        selectInput(ns("plot_stat"), "Functie", 
-                                   choices = c("mean","count","max", "sum"))
+                        selectInput(ns("plot_stat"), 
+                                    label_tooltip("Functie", "For barplots, the function used to aggregate the data into bars"),
+                                    choices = c("mean","count","max", "sum"))
                        )
                        
                 ),
                 tabPanel("Labels",
                        textInput(ns("plot_xlab"), "X-axis label"),
                        textInput(ns("plot_ylab"), "Y-axis label"),
-                       textInput(ns("plot_glab"), "Group label"),
-                       numericInput(ns("num_labelsize"), "Font size", min =8, max=20, value=12),
-                       numericInput(ns("num_labelmargin"), "Label margin", min = 0, max=10, value=2)
+                       textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend")),
+                       numericInput(ns("num_labelsize"), 
+                                    label_tooltip("Font size","Adjusts the base font size, affects all text"),
+                                    min =8, max=20, value=12),
+                       numericInput(ns("num_labelmargin"),
+                                    label_tooltip("Label margin","Space between axis and axis labels"),
+                                    min = 0, max=10, value=2)
                        
                        
                 ),
@@ -80,11 +90,12 @@ customplotcontrolsUI <- function(id){
                       tags$br(),
                       side_by_side(
                         actionButton(ns("btn_load_palette"), 
-                                   "Load", 
+                                   label_tooltip("Load", "Load colors from selected palette"),
                                    class = "btn btn-primary",
                                    icon = icon("chevron-down", lib = "glyphicon")),
                         tags$br(),
-                        numericInput(ns("num_start_palette"), "Start at",
+                        numericInput(ns("num_start_palette"), 
+                                     label_tooltip("Start at", "Load colors starting from this color"),
                                      value = 1, min=1, max=12, step=1, width="100px")
                       ),
                       tags$hr(),
@@ -98,7 +109,9 @@ customplotcontrolsUI <- function(id){
                         
                       }),
                       tags$br(),
-                      actionButton(ns("btn_erase_palette"), "Erase", icon = icon("eraser"))
+                      actionButton(ns("btn_erase_palette"), 
+                                   label_tooltip("Erase","Clear all colors"),
+                                   icon = icon("eraser"))
                       
                     
                 ),
@@ -106,7 +119,7 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Theme",
                 
                          selectInput(ns("select_theme"),
-                                     "Select ggplot2 theme",
+                                     label_tooltip("Select theme","Select ggplot2 theme, affects styling"),
                                      choices = c("theme_minimal","theme_bw","theme_classic",
                                                  "theme_linedraw","theme_light",
                                                  "theme_base","theme_calc","theme_clean","theme_economist",
@@ -132,10 +145,14 @@ customplotcontrolsUI <- function(id){
               tags$br(),
               tags$br(),
               tags$hr(),
-              actionButton(ns("btn_addplot"), "Make plot", class = "btn btn-primary", 
+              actionButton(ns("btn_addplot"), 
+                           label_tooltip("Make plot","Add plot to dashboard"), 
+                           class = "btn btn-primary", 
                            icon = icon("plus", lib = "glyphicon")),
               shinyjs::hidden(
-                actionButton(ns("btn_updateplot"), "Update plot", class = "btn btn-primary", 
+                actionButton(ns("btn_updateplot"), 
+                             label_tooltip("Update plot", "Update the last selected plot"), 
+                             class = "btn btn-primary", 
                              icon = icon("refresh", lib = "glyphicon"))
               ),
               textOutput(ns("txt_info"))
@@ -149,7 +166,7 @@ customplotcontrolsUI <- function(id){
       )
     
   )
-      
+  
    
 }
 
