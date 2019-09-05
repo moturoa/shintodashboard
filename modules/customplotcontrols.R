@@ -83,6 +83,17 @@ customplotcontrolsUI <- function(id){
                        
                        
                 ),
+                tabPanel("Axes",
+                
+                         
+                       checkboxInput(ns("chk_includezerox"), 
+                                     label_tooltip("X - include 0", "Start X-axis at zero"),
+                                                   value = FALSE),
+                       checkboxInput(ns("chk_includezeroy"), 
+                                     label_tooltip("Y - include 0", "Start Y-axis at zero"),
+                                                    value = FALSE)
+                                  
+                ),
                 tabPanel("Colors",
                       
                       side_by_side(
@@ -219,6 +230,8 @@ customplotcontrols <- function(input, output, session){
       palette = pal,
       shape = input$scatter_shape,
       theme = input$select_theme,
+      includezerox = input$chk_includezerox,
+      includezeroy = input$chk_includezeroy,
       labelsize = input$num_labelsize,
       labelmargin =input$num_labelmargin,
       labelanglex =  input$sel_labelanglex,

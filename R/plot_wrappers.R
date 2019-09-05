@@ -99,6 +99,13 @@ custom_plot <- function(a){
   }
   
   
+  if(a$includezerox){
+    p <- p + ggplot2::expand_limits(x=0)
+  }
+  if(a$includezeroy){
+    p <- p + ggplot2::expand_limits(y=0)
+  }
+  
   # p <- ggplotly(p) %>%
   #   config(displaylogo = FALSE, 
   #          modeBarButtonsToRemove = c(
