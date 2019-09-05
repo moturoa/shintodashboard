@@ -20,8 +20,8 @@ source("../R/functions.R")
 
 
 # Config
-dash <- readRDS("../cache/dashboards.rds")[["wbm1"]]
-widget_size <- list(width = 600, height = 400, margin = 10, padding = 25)
+dash <- readRDS("../cache/dashboards.rds")[["wbm2"]]
+widget_size <- list(width = 500, height = 400, margin = 10, padding = 25)
 
 
 

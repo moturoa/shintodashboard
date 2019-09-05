@@ -90,6 +90,23 @@ custom_plot <- function(a){
                    axis.text.x=element_text(angle = as.numeric(a$labelanglex)),
                    axis.text.y=element_text(angle = as.numeric(a$labelangley)))
   
+  if(a$nolabelsx){
+    p <- p + ggplot2::theme(axis.text.x = element_blank())
+  }
+  
+  if(a$nolegend){
+    p <- p + ggplot2::theme(legend.position = "none")
+  }
+  
+  
+  # p <- ggplotly(p) %>%
+  #   config(displaylogo = FALSE, 
+  #          modeBarButtonsToRemove = c(
+  #            'sendDataToCloud', 'autoScale2d', 'resetScale2d', 'toggleSpikelines',
+  #            'hoverClosestCartesian', 'hoverCompareCartesian',
+  #            'zoom2d','pan2d','select2d','lasso2d','zoomIn2d','zoomOut2d'
+  #          ))
+  
   print(p)
 }
 
@@ -188,7 +205,7 @@ grouped_barplot <- function(data,
     
     ggplot(data_agg, aes(x = x, y = y, fill = x)) +
       geom_bar(stat="identity", position = position()) + 
-      labs(x = xlab, y = ylab) 
+      labs(x = xlab, y = ylab, fill = glab) 
     } else {
         
       

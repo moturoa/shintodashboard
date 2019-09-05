@@ -76,6 +76,8 @@ customplotcontrolsUI <- function(id){
                                                    "Axis label rotation. Select 90 for labels perpendicular to axis"),
                                      choices = c(0,90), width = "148px")
                        ),
+                       checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
+                       checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px"),
                        tags$br()
                        
                        
@@ -221,6 +223,8 @@ customplotcontrols <- function(input, output, session){
       labelmargin =input$num_labelmargin,
       labelanglex =  input$sel_labelanglex,
       labelangley =  input$sel_labelangley,
+      nolabelsx = input$chk_removelabelsx,
+      nolegend =  input$chk_nolegend,
       filters = list(input$filterx1, input$filterx2, input$filterx3, 
                      input$filtery1, input$filtery2, input$filtery3, 
                      input$filterg1, input$filterg2, input$filterg3)
@@ -347,7 +351,7 @@ customplotcontrols <- function(input, output, session){
     insertUI(
       "#placeholder", where = "beforeEnd",
       
-      tags$div(id = id_container,  class = "col-sm-4", 
+      tags$div(id = id_container,  class = "col-sm-6", 
                tags$div(class = "box cpbox",
                         tags$div(class = "box-body",
                                  actionButton(ns(id_closebutton), 
@@ -356,7 +360,7 @@ customplotcontrols <- function(input, output, session){
                                               label="", icon=icon("edit"), class="plotbutton"),
                                  actionButton(ns(id_downloadbutton), 
                                               label="", icon=icon("download"), class="plotbutton"),
-                                 plotOutput(ns(id_plot))
+                                 plotOutput(ns(id_plot), height = "280px")
                         )
                )
       )
@@ -376,7 +380,7 @@ customplotcontrols <- function(input, output, session){
         custom_plot(plot_settings[[id_container]])
       )
       
-    }, height = 280)
+    })
     
     
     observeEvent(input[[id_closebutton]], {
