@@ -332,6 +332,7 @@ customplotcontrols <- function(input, output, session){
 
     out <- load_dashboard(thisdash)
     
+    
     for(i in seq_along(out)){
       add_plot(plotarguments = out[[i]])
     }
@@ -371,8 +372,8 @@ customplotcontrols <- function(input, output, session){
                                               label=HTML("&times;"), class="plotbutton"),
                                  actionButton(ns(id_editbutton), 
                                               label="", icon=icon("edit"), class="plotbutton"),
-                                 actionButton(ns(id_downloadbutton), 
-                                              label="", icon=icon("download"), class="plotbutton"),
+                                 # actionButton(ns(id_downloadbutton), 
+                                 #              label="", icon=icon("download"), class="plotbutton"),
                                  plotOutput(ns(id_plot), height = "280px")
                         )
                )
@@ -381,8 +382,6 @@ customplotcontrols <- function(input, output, session){
     
     if(is.null(plotarguments)){
       plot_settings[[id_container]] <<- read_plot_settings()
-      
-      #print(jsonlite::toJSON(plot_settings[[id_container]]))
     } else {
       plot_settings[[id_container]] <<- plotarguments
     }
@@ -420,6 +419,7 @@ customplotcontrols <- function(input, output, session){
                               selected = a$groupvar)
 
       updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
+      
       if(a$groupvar == ""){
         updateCheckboxInput(session, "chk_usegroup",value = FALSE)
       }
@@ -433,9 +433,11 @@ customplotcontrols <- function(input, output, session){
           }
         }
       }
+      
       fs <- c("filterx1", "filterx2", "filterx3", 
-                     "filtery1", "filtery2", "filtery3", 
-                     "filterg1", "filterg2", "filterg3")
+              "filtery1", "filtery2", "filtery3", 
+              "filterg1", "filterg2", "filterg3")
+      
       type <- rep(c(TRUE,TRUE,FALSE),3)
       for(i in seq_along(fs)){
         update_filter(fs[i], i, type[i])
@@ -445,7 +447,6 @@ customplotcontrols <- function(input, output, session){
                         selected = a$plottype)
       updateSelectInput(session, "scatter_shape", 
                         selected = a$shape)
-      
       updateSelectInput(session, "plot_stat", 
                         selected = a$statfun)
       

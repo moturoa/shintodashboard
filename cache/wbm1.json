@@ -1,0 +1,38 @@
+{
+  "controls-customplotOcRIKH": {
+    "dataset": ["woning_productie"],
+    "plottype": ["Stacked barplot"],
+    "xvar": ["opleverjaar"],
+    "factor_x": [false],
+    "factor_y": [false],
+    "yvar": ["aantalwoningen"],
+    "usegroup": [true],
+    "groupvar": ["prijsklasse"],
+    "xlab": ["Jaar"],
+    "ylab": ["Aantal woningen"],
+    "glab": [""],
+    "statfun": ["count"],
+    "palette": ["#000040", "#000093", "#0020E9", "#0076FF", "#00B8C2", "#04E466", "#49FB25", "#E7FD09", "#FEEA02", "#FFC200", "#FF8500", "#FF3300"],
+    "shape": ["circles"],
+    "theme": ["theme_minimal"],
+    "includezerox": [false],
+    "includezeroy": [true],
+    "labelsize": [12],
+    "labelmargin": [2],
+    "labelanglex": ["0"],
+    "labelangley": ["0"],
+    "nolabelsx": [false],
+    "nolegend": [false],
+    "filters": [
+      [2019],
+      [2023],
+      {},
+      [0],
+      [400],
+      {},
+      {},
+      {},
+      {}
+    ]
+  }
+}

@@ -13,7 +13,7 @@ random_word <- function(n = 6){
 }
 
 is_empty <- function(x){
-  is.null(x) || x == ""
+  is.null(x) || x == "" || length(x) == 0
 }
 
 side_by_side <- function(...){
@@ -28,38 +28,25 @@ side_by_side <- function(...){
 }
 
 
-side_by_side(
-  checkboxInput("chk_colorbrewer", "Use", value = TRUE), 
-  selectInput("select_palette", 
-              "Color palette (Color Brewer) (>8 colors)",
-              choices = rownames(brewer.pal.info), 
-              selected = "Set3", width = "150px")
-)
-
-
 save_dashboard <- function(dashboard, name){
   
-  fn <- "cache/dashboards.rds"
-  if(file.exists(fn)){
-    dash <- readRDS(fn)
-    dash[[name]] <- dashboard
-  } else {
-    dash <- list(dashboard)
-    names(dash) <- name
-  }
+  out <- jsonlite::toJSON(dashboard, pretty = TRUE)
   
-  saveRDS(dash, fn)
+  name <- gsub("[[:space:]]", "_", name)
+  fn_out <- file.path("cache", paste0(name, ".json"))
+  writeLines(out, fn_out)
   
 }
 
 load_dashboard <- function(id){
-  readRDS("cache/dashboards.rds")[[id]]
+  fn_out <- file.path("cache", paste0(id, ".json"))
+  jsonlite::fromJSON(fn_out)
 }
 
 list_dashboards <- function(){
-  fn <- "cache/dashboards.rds"
-  if(!file.exists(fn))return("")
-  names(readRDS("cache/dashboards.rds"))
+  
+  fns <- dir("cache", pattern = "[.]json$")
+  tools::file_path_sans_ext(fns)
 }
 
 

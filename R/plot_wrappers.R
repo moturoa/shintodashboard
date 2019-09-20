@@ -20,10 +20,10 @@ custom_plot <- function(a){
     
     if(is_empty(column))return(data)
     if(is.numeric(data[,column])){
-      if(is.null(f[[1]]) | is.null(f[[2]]))return(data)
+      if(is_empty(f[[1]]) | is_empty(f[[2]]))return(data)
       data <- filter(data, !!sym(column) >= f[[1]], !!sym(column) <= f[[2]])
     } else {
-      if(is.null(f[[3]]))return(data)
+      if(is_empty(f[[3]]))return(data)
       data <- filter(data, !!sym(column) %in% f[[3]])
     }
   
@@ -31,8 +31,8 @@ custom_plot <- function(a){
   }
   
   dataset <- apply_filter(dataset, a$xvar, a$filters[1:3]) %>% 
-    apply_filter(a$yvar, a$filters[4:6]) %>%
-    apply_filter(a$groupvar, a$filters[7:9])
+    apply_filter(., a$yvar, a$filters[4:6]) %>%
+    apply_filter(., a$groupvar, a$filters[7:9])
   
   pal <- a$palette
   
