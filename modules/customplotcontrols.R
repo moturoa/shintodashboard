@@ -58,6 +58,8 @@ customplotcontrolsUI <- function(id){
                        
                 ),
                 tabPanel("Labels",
+                       textInput(ns("plot_title"), "Title"),
+                       textInput(ns("plot_subtitle"), "Sub-title"),
                        textInput(ns("plot_xlab"), "X-axis label"),
                        textInput(ns("plot_ylab"), "Y-axis label"),
                        textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend")),
@@ -223,6 +225,8 @@ customplotcontrols <- function(input, output, session){
       yvar = as.character(input$plot_yvar),
       usegroup = input$chk_usegroup,
       groupvar = as.character(input$plot_groupvar),
+      title = input$plot_title,
+      subtitle = input$plot_subtitle,
       xlab = input$plot_xlab,
       ylab = input$plot_ylab,
       glab = input$plot_glab,
@@ -275,6 +279,19 @@ customplotcontrols <- function(input, output, session){
     updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = names(dataset)[4])
     updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = names(dataset)[5])
     updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = "")
+    
+  })
+  
+  observeEvent(input$plot_type, {
+    
+    if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
+      shinyjs::show("plot_stat")
+      shinyjs::hide("scatter_shape")
+    }
+    if(input$plot_type == "Scatter"){
+      shinyjs::hide("plot_stat")
+      shinyjs::show("scatter_shape")
+    }
     
   })
   
@@ -332,25 +349,12 @@ customplotcontrols <- function(input, output, session){
 
     out <- load_dashboard(thisdash)
     
-    
     for(i in seq_along(out)){
       add_plot(plotarguments = out[[i]])
     }
     
   })
   
-  observeEvent(input$plot_type, {
-    
-    if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
-      shinyjs::show("plot_stat")
-      shinyjs::hide("scatter_shape")
-    }
-    if(input$plot_type == "Scatter"){
-      shinyjs::hide("plot_stat")
-      shinyjs::show("scatter_shape")
-    }
-    
-  })
   
   add_plot <- function(plotarguments = NULL){
     
@@ -453,6 +457,17 @@ customplotcontrols <- function(input, output, session){
       updateTextInput(session, "plot_xlab", value = a$xlab)
       updateTextInput(session, "plot_ylab", value = a$ylab)
       updateTextInput(session, "plot_glab", value = a$glab)
+      
+      maybe <- function(x){
+        if(is.null(x)) {
+          ""
+        } else {
+          x
+        }
+      }
+      updateTextInput(session, "plot_title", value = maybe(a$title))
+      updateTextInput(session, "plot_subtitle", value = maybe(a$subtitle))
+      
      
       updateNumericInput(session, "num_labelsize", value = a$labelsize)
       updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
