@@ -42,7 +42,7 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Plot type",
                        
                        selectInput(ns("plot_type"), "Plot type", 
-                                   choices = c("Scatter", "Barplot", "Stacked barplot")),
+                                   choices = c("Scatter", "Barplot", "Stacked barplot", "Pie chart")),
                        shinyjs::hidden(
                          
                          selectInput(ns("scatter_shape"), "Markers", 
@@ -54,6 +54,15 @@ customplotcontrolsUI <- function(id){
                         selectInput(ns("plot_stat"), 
                                     label_tooltip("Functie", "For barplots, the function used to aggregate the data into bars"),
                                     choices = c("mean","count","max", "sum"))
+                       ),
+                       
+                       shinyjs::hidden(
+                         radioButtons(ns("pietype"), "Pie chart type",
+                                      choices = c("Pie","Waffle"), selected = "Waffle")
+                       ),
+                       shinyjs::hidden(
+                         checkboxInput(ns("pienarm"), "Remove missing values (NA)",value = FALSE)
+
                        )
                        
                 ),
@@ -159,10 +168,10 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Dashboard",
                        
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
-                       tags$hr(),
                        actionButton(ns("btn_save_dashboard"), 
                                     "Save Dashboard", icon=icon("save"),
                                     onclick = "customplotorder();"),
+                       tags$hr(),
                        selectInput(ns("select_dashboard"), "Dashboard database",
                                    choices = list_dashboards()),
                        actionButton(ns("btn_load_dashboard"), "Load"),
@@ -233,6 +242,8 @@ customplotcontrols <- function(input, output, session){
       ylab = input$plot_ylab,
       glab = input$plot_glab,
       statfun = input$plot_stat,
+      pietype = tolower(input$pietype),
+      pienarm = input$pienarm,
       palette = pal,
       shape = input$scatter_shape,
       theme = input$select_theme,
@@ -289,10 +300,21 @@ customplotcontrols <- function(input, output, session){
     if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
       shinyjs::show("plot_stat")
       shinyjs::hide("scatter_shape")
+      shinyjs::hide("pietype")
+      shinyjs::hide("pienarm")
     }
     if(input$plot_type == "Scatter"){
       shinyjs::hide("plot_stat")
       shinyjs::show("scatter_shape")
+      shinyjs::hide("pietype")
+      shinyjs::hide("pienarm")
+      
+    }
+    if(input$plot_type == "Pie chart"){
+      shinyjs::hide("plot_stat")
+      shinyjs::hide("scatter_shape")
+      shinyjs::show("pietype")
+      shinyjs::show("pienarm")
     }
     
   })
@@ -305,7 +327,7 @@ customplotcontrols <- function(input, output, session){
   })
   
   observeEvent(input$chk_colorbrewer, {
-    if(as.logical(input$chk_colorbrewer)){
+    if(as.logical(input$chk_colorbrewer
       updateCheckboxInput(session, "chk_canva", value = FALSE)
     }
   })
@@ -470,7 +492,6 @@ customplotcontrols <- function(input, output, session){
       updateTextInput(session, "plot_title", value = maybe(a$title))
       updateTextInput(session, "plot_subtitle", value = maybe(a$subtitle))
       
-     
       updateNumericInput(session, "num_labelsize", value = a$labelsize)
       updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
       

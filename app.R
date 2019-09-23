@@ -22,12 +22,15 @@ server <- function(input, output, session){
   
   out <- callModule(customplotcontrols, "controls")
 
-    
 }
 
 
 
 shinyApp(ui = ui, 
          server = server)
+
+
+
+
 
 
