@@ -10,6 +10,7 @@ ui <- fluidPage(
   useShinyjs(),
   includeCSS("www/style.css"),
   includeScript("www/tooltip.js"),
+  includeScript("www/plotorder.js"),
   
   customplotcontrolsUI("controls")
   
@@ -21,6 +22,7 @@ server <- function(input, output, session){
   
   out <- callModule(customplotcontrols, "controls")
 
+    
 }
 
 

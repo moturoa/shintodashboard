@@ -160,7 +160,9 @@ customplotcontrolsUI <- function(id){
                        
                        textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
                        tags$hr(),
-                       actionButton(ns("btn_save_dashboard"), "Save Dashboard", icon=icon("save")),
+                       actionButton(ns("btn_save_dashboard"), 
+                                    "Save Dashboard", icon=icon("save"),
+                                    onclick = "customplotorder();"),
                        selectInput(ns("select_dashboard"), "Dashboard database",
                                    choices = list_dashboards()),
                        actionButton(ns("btn_load_dashboard"), "Load"),
@@ -317,7 +319,7 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_save_dashboard, {
     
-    save_dashboard(plot_settings[current_ids], input$txt_dashboard_name)
+    save_dashboard(plot_settings[input$customplotids], input$txt_dashboard_name)
     
     updateSelectInput(session, "select_dashboard", 
                       choices = list_dashboards())
@@ -369,7 +371,7 @@ customplotcontrols <- function(input, output, session){
     insertUI(
       "#placeholder", where = "beforeEnd",
       
-      tags$div(id = id_container,  class = "col-sm-6", 
+      tags$div(id = id_container,  class = "customplot col-sm-6", 
                tags$div(class = "box cpbox",
                         tags$div(class = "box-body",
                                  actionButton(ns(id_closebutton), 
