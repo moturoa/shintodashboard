@@ -10,7 +10,7 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Data",
                 
                        selectInput(ns("select_dataset"), "Dataset", 
-                                   choices = c("woning_productie","automobiles","mtcars","iris")),
+                                   choices = available_datasets),
                        
                        side_by_side(
                         selectInput(ns("plot_xvar"), 
@@ -34,15 +34,11 @@ customplotcontrolsUI <- function(id){
                                    choices = "", selected = "")
 
                 ),       
-                tabPanel("Filter",
-                  
-                   uiOutput(ns("filter_controls"))
-                         
-                ),
                 tabPanel("Plot type",
                        
                        selectInput(ns("plot_type"), "Plot type", 
-                                   choices = c("Scatter", "Barplot", "Stacked barplot", "Pie chart")),
+                                   choices = c("Scatter", "Barplot", "Stacked barplot", "Pie chart"),
+                                   selected = "Barplot"),
                        shinyjs::hidden(
                          
                          selectInput(ns("scatter_shape"), "Markers", 
@@ -53,7 +49,8 @@ customplotcontrolsUI <- function(id){
                        shinyjs::hidden(
                         selectInput(ns("plot_stat"), 
                                     label_tooltip("Functie", "For barplots, the function used to aggregate the data into bars"),
-                                    choices = c("mean","count","max", "sum"))
+                                    choices = c("mean","count","max", "sum"),
+                                    selected = "sum")
                        ),
                        
                        shinyjs::hidden(
@@ -65,6 +62,11 @@ customplotcontrolsUI <- function(id){
 
                        )
                        
+                ),
+                tabPanel("Filter",
+                         
+                         uiOutput(ns("filter_controls"))
+                         
                 ),
                 tabPanel("Labels",
                        textInput(ns("plot_title"), "Title"),
@@ -327,7 +329,7 @@ customplotcontrols <- function(input, output, session){
   })
   
   observeEvent(input$chk_colorbrewer, {
-    if(as.logical(input$chk_colorbrewer
+    if(as.logical(input$chk_colorbrewer)){
       updateCheckboxInput(session, "chk_canva", value = FALSE)
     }
   })
