@@ -68,7 +68,11 @@ customplotcontrolsUI <- function(id){
                          uiOutput(ns("filter_controls"))
                          
                 ),
-                
+                tabPanel("Interactive",
+                         
+                      uiOutput(ns("interactive_controls"))
+                      
+                ),
                 tabPanel("Labels",
                        textInput(ns("plot_title"), "Title"),
                        textInput(ns("plot_subtitle"), "Sub-title"),
@@ -218,7 +222,38 @@ customplotcontrols <- function(input, output, session){
     current_id_plot = NULL
   )
   
+  current_dataset <- reactive({
+    get(input$select_dataset)
+  })
+  
+  current_available_columns <- reactive({
+    names(current_dataset())
+  })
+  
   ns <- session$ns
+  
+  
+  read_interactive_controls <- function(){
+    
+
+    if(is_empty(input$ia_select_variable1)){
+      
+      return(NULL)
+      
+    } else {
+      
+      list(
+        element1 = input$ia_select_input1,
+        variable1 = input$ia_select_variable1,
+        element2 = input$ia_select_input2,
+        variable2 = input$ia_select_variable2
+        
+      )
+      
+    }
+    
+  }
+  
   
   read_plot_settings <- function(){
     
@@ -250,14 +285,16 @@ customplotcontrols <- function(input, output, session){
       includezerox = input$chk_includezerox,
       includezeroy = input$chk_includezeroy,
       labelsize = input$num_labelsize,
-      labelmargin =input$num_labelmargin,
+      labelmargin = input$num_labelmargin,
       labelanglex =  input$sel_labelanglex,
       labelangley =  input$sel_labelangley,
       nolabelsx = input$chk_removelabelsx,
       nolegend =  input$chk_nolegend,
       filters = list(input$filterx1, input$filterx2, input$filterx3, 
                      input$filtery1, input$filtery2, input$filtery3, 
-                     input$filterg1, input$filterg2, input$filterg3)
+                     input$filterg1, input$filterg2, input$filterg3),
+      interactive = read_interactive_controls()
+      
     )
   }
 
@@ -282,20 +319,20 @@ customplotcontrols <- function(input, output, session){
       updateColourInput(session, paste0("sel_color",i), value = "white")
     }
 
-    
   })
   
   
   observeEvent(input$select_dataset, {
-    
-    dataset <- get(input$select_dataset)
 
-    updateSelectInput(session, "plot_xvar", choices = names(dataset), 
-                      selected = if(!is_empty(input$plot_xvar))input$plot_xvar else names(dataset)[1])
-    updateSelectInput(session, "plot_yvar", choices = names(dataset), 
-                      selected = if(!is_empty(input$plot_yvar))input$plot_yvar else names(dataset)[2])
-    updateSelectInput(session, "plot_groupvar", choices = names(dataset), 
-                      selected = if(!is_empty(input$plot_groupvar))input$plot_groupvar else names(dataset)[3])
+    cols <- current_available_columns()
+    
+    updateSelectInput(session, "plot_xvar", 
+                      choices = cols, 
+                      selected = if(!is_empty(input$plot_xvar))input$plot_xvar else cols[1])
+    updateSelectInput(session, "plot_yvar", choices = cols, 
+                      selected = if(!is_empty(input$plot_yvar))input$plot_yvar else cols[2])
+    updateSelectInput(session, "plot_groupvar", choices = cols, 
+                      selected = if(!is_empty(input$plot_groupvar))input$plot_groupvar else cols[3])
     
   })
   
@@ -383,37 +420,81 @@ customplotcontrols <- function(input, output, session){
   })
   
   
+  widget_ui <- function(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
+                        interactive){
+    
+    inner_content <- list(
+      actionButton(ns(id_closebutton), 
+                   label=HTML("&times;"), class="plotbutton"),
+      actionButton(ns(id_editbutton), 
+                   label="", icon=icon("edit"), class="plotbutton"),
+      plotOutput(ns(id_plot), height = "280px")
+    )
+    
+    if(!is.null(interactive)){
+      
+      if(!is_empty(interactive$variable1)){
+        
+        column_data <- current_dataset()[interactive$variable1]
+        
+        if(interactive$element1 == "selectInput"){
+          el <- selectInput(ns(id_interactive[1]), 
+                            label = interactive$variable1,
+                            choices = unique(column_data)
+          )
+        } else {
+          el <- sliderInput(ns(id_interactive[1]),
+                            label = interactive$variable1,
+                            min = min(column_data, na.rm=TRUE),
+                            max = max(column_data, na.rm=TRUE),
+                            value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE))
+                            
+                            )
+        }
+        
+        inner_content <- c(inner_content, el)
+                           
+      }
+      
+    }
+    
+    
+    withTags(
+      div(id = id_container,  class = "customplot col-sm-6", 
+             div(class = "box cpbox",
+                      tags$div(class = "box-body",
+                               inner_content
+                      )
+             )
+      )
+    )
+  }
+  
   add_plot <- function(plotarguments = NULL){
     
     id_container <- ns(paste0("customplot", random_word(6)))
     id_plot <- paste0(id_container, "_plot")
     id_closebutton <- paste0(id_container,"_btn_close")
     id_editbutton <- paste0(id_container,"_btn_edit")
-    id_downloadbutton <- paste0(id_container,"_btn_download")
+    id_interactive <- paste0(id_container, "_interactive_", 1:4)
     
-    current_ids <<- c(current_ids, id_container)
-    
-    insertUI(
-      "#placeholder", where = "beforeEnd",
-      
-      tags$div(id = id_container,  class = "customplot col-sm-6", 
-               tags$div(class = "box cpbox",
-                        tags$div(class = "box-body",
-                                 actionButton(ns(id_closebutton), 
-                                              label=HTML("&times;"), class="plotbutton"),
-                                 actionButton(ns(id_editbutton), 
-                                              label="", icon=icon("edit"), class="plotbutton"),
-                                 plotOutput(ns(id_plot), height = "280px")
-                        )
-               )
-      )
-    )
     
     if(is.null(plotarguments)){
       plot_settings[[id_container]] <<- read_plot_settings()
     } else {
       plot_settings[[id_container]] <<- plotarguments
     }
+    
+    current_ids <<- c(current_ids, id_container)
+    
+    insertUI(
+      "#placeholder", where = "beforeEnd",
+      
+      widget_ui(id_container, id_plot,id_closebutton,id_editbutton,id_interactive,
+                interactive = plot_settings[[id_container]]$interactive)
+    )
+    
+
     
     output[[id_plot]] <- renderPlot({
       
@@ -438,10 +519,9 @@ customplotcontrols <- function(input, output, session){
       
       updateSelectInput(session, "select_dataset", selected = a$dataset)
       
-      dataset <- get(a$dataset)
-      updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = a$xvar)
-      updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = a$yvar)
-      updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = a$groupvar)
+      updateSelectInput(session, "plot_xvar", choices = current_available_columns(), selected = a$xvar)
+      updateSelectInput(session, "plot_yvar", choices = current_available_columns(), selected = a$yvar)
+      updateSelectInput(session, "plot_groupvar", choices = current_available_columns(), selected = a$groupvar)
       
       updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
       
@@ -525,8 +605,6 @@ customplotcontrols <- function(input, output, session){
 
   output$filter_controls <- renderUI({
         
-      dataset <- get(input$select_dataset)
-
       make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
         data <- data[!is.na(data)]
         if(!force_factor && is.numeric(data)){
@@ -547,15 +625,87 @@ customplotcontrols <- function(input, output, session){
       }
       
       tagList(
-        make_controls(dataset[[input$plot_xvar]], "X variable", idbase="filterx", force_factor = input$chk_factor_x),
-        make_controls(dataset[[input$plot_yvar]], "Y variable", idbase="filtery", force_factor = input$chk_factor_y),
-        make_controls(dataset[[input$plot_groupvar]], "Group variable", idbase="filterg", force_factor = TRUE)
+        make_controls(current_dataset()[[input$plot_xvar]], "X variable", 
+                      idbase="filterx", force_factor = input$chk_factor_x),
+        make_controls(current_dataset()[[input$plot_yvar]], "Y variable", 
+                      idbase="filtery", force_factor = input$chk_factor_y),
+        make_controls(current_dataset()[[input$plot_groupvar]], "Group variable", 
+                      idbase="filterg", force_factor = TRUE)
       )
     
         
   })
 
+  output$interactive_controls <- renderUI({
+    
+    
+    tagList(
+      h4("Interactive element 1"),
+      selectInput(ns("ia_select_input1"), 
+                  "Selector type",
+                  choices = list("None" = "",
+                                 "Select category" = "selectInput",
+                                 "Numeric slider" = "sliderInput")),
+      shinyjs::hidden(
+        selectInput(ns("ia_select_variable1"), 
+                    "Affected variable",
+                    choices = c("", current_available_columns()))
+      ),
+      
+      
+      shinyjs::hidden(
+        tags$div(id = ns("interactive_panel_2"),
+          h4("Interactive element 2"),
+          selectInput(ns("ia_select_input2"), 
+                      "Selector type",
+                      choices = list("None" = "",
+                                     "Select category" = "selectInput",
+                                     "Numeric slider" = "sliderInput")),
+          shinyjs::hidden(
+            selectInput(ns("ia_select_variable2"), 
+                        "Affected variable",
+                        choices = c("", current_available_columns()))
+          )
+        )
+      )
+    )
+      
+  })
+  
+  observe({
+    
+    sel <- input$ia_select_input1
+    req(sel)
+    
+    if(sel != "None"){
+      shinyjs::show("ia_select_variable1")
+    }
+    
+  })
+  
+  observe({
+    
+    sel <- input$ia_select_variable1
+    req(sel)
+    
+    if(sel != "None"){
+      shinyjs::show("interactive_panel_2")
+    }
+    
+  })
 
+  
+  observe({
+    
+    sel <- input$ia_select_input2
+    req(sel)
+    
+    if(sel != ""){
+      shinyjs::show("ia_select_variable2")
+    }
+    
+  })
+  
   
   observeEvent(input$btn_updateplot, {
     
