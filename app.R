@@ -7,6 +7,7 @@ source("modules/customplotcontrols.R")
 
 
 ui <- fluidPage(
+  
   useShinyjs(),
   includeCSS("www/style.css"),
   includeScript("www/tooltip.js"),

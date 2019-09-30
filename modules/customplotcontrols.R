@@ -314,7 +314,7 @@ customplotcontrols <- function(input, output, session){
   })
   
   observeEvent(input$btn_erase_palette, {
-    
+
     for(i in 1:12){
       updateColourInput(session, paste0("sel_color",i), value = "white")
     }
@@ -414,14 +414,14 @@ customplotcontrols <- function(input, output, session){
     out <- load_dashboard(thisdash)
     
     for(i in seq_along(out)){
-      add_plot(plotarguments = out[[i]])
+      add_widget(plotarguments = out[[i]])
     }
     
   })
   
   
   widget_ui <- function(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
-                        interactive){
+                        interactive, data = NULL){
     
     inner_content <- list(
       actionButton(ns(id_closebutton), 
@@ -435,11 +435,12 @@ customplotcontrols <- function(input, output, session){
       
       if(!is_empty(interactive$variable1)){
         
-        column_data <- current_dataset()[interactive$variable1]
+        column_data <- data[interactive$variable1]
         
         if(interactive$element1 == "selectInput"){
           el <- selectInput(ns(id_interactive[1]), 
                             label = interactive$variable1,
+                            multiple = TRUE,
                             choices = unique(column_data)
           )
         } else {
@@ -448,11 +449,10 @@ customplotcontrols <- function(input, output, session){
                             min = min(column_data, na.rm=TRUE),
                             max = max(column_data, na.rm=TRUE),
                             value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE))
-                            
                             )
         }
         
-        inner_content <- c(inner_content, el)
+        inner_content <- c(inner_content, list(el))
                            
       }
       
@@ -461,7 +461,7 @@ customplotcontrols <- function(input, output, session){
     
     withTags(
       div(id = id_container,  class = "customplot col-sm-6", 
-             div(class = "box cpbox",
+             div(class = "box cpbox", style = "height: 400px;",
                       tags$div(class = "box-body",
                                inner_content
                       )
@@ -470,14 +470,13 @@ customplotcontrols <- function(input, output, session){
     )
   }
   
-  add_plot <- function(plotarguments = NULL){
+  add_widget <- function(plotarguments = NULL){
     
     id_container <- ns(paste0("customplot", random_word(6)))
     id_plot <- paste0(id_container, "_plot")
     id_closebutton <- paste0(id_container,"_btn_close")
     id_editbutton <- paste0(id_container,"_btn_edit")
-    id_interactive <- paste0(id_container, "_interactive_", 1:4)
-    
+    id_interactive <- paste0(id_container, "_interactive_", 1:2)
     
     if(is.null(plotarguments)){
       plot_settings[[id_container]] <<- read_plot_settings()
@@ -487,19 +486,24 @@ customplotcontrols <- function(input, output, session){
     
     current_ids <<- c(current_ids, id_container)
     
+    dataset <- get(plot_settings[[id_container]]$dataset)
+    
     insertUI(
       "#placeholder", where = "beforeEnd",
       
       widget_ui(id_container, id_plot,id_closebutton,id_editbutton,id_interactive,
-                interactive = plot_settings[[id_container]]$interactive)
+                interactive = plot_settings[[id_container]]$interactive,
+                data = dataset)
     )
-    
-
     
     output[[id_plot]] <- renderPlot({
       
+      interactive_vals <- list(input[[id_interactive[1]]], 
+                            input[[id_interactive[2]]])
+      
       isolate(
-        custom_plot(plot_settings[[id_container]])
+        custom_plot(plotarguments = plot_settings[[id_container]],
+                    interactive = interactive_vals)
       )
       
     })
@@ -596,7 +600,7 @@ customplotcontrols <- function(input, output, session){
     if(is_empty(input$plot_xvar) | is_empty(input$plot_yvar)){
       output$txt_info <- renderText({"First Select X and Y variables"})
     } else {
-      add_plot()  
+      add_widget()  
       shinyjs::hide("btn_updateplot")
     }
     
