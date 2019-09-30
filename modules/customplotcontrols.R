@@ -68,6 +68,7 @@ customplotcontrolsUI <- function(id){
                          uiOutput(ns("filter_controls"))
                          
                 ),
+                
                 tabPanel("Labels",
                        textInput(ns("plot_title"), "Title"),
                        textInput(ns("plot_subtitle"), "Sub-title"),
@@ -92,8 +93,6 @@ customplotcontrolsUI <- function(id){
                        checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
                        checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px"),
                        tags$br()
-                       
-                       
                        
                 ),
                 tabPanel("Axes",
@@ -163,13 +162,12 @@ customplotcontrolsUI <- function(id){
                                                  "theme_economist_white","theme_excel","theme_few",
                                                  "theme_fivethirtyeight","theme_foundation",
                                                  "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
-                                     
                                   
-                         
                 ),
                 tabPanel("Dashboard",
                        
-                       textInput(ns("txt_dashboard_name"), "Naam", value = glue("dashboard_{sample(1:10^4,1)}")),
+                       textInput(ns("txt_dashboard_name"), "Naam", 
+                                 value = glue("dashboard_{sample(1:10^4,1)}")),
                        actionButton(ns("btn_save_dashboard"), 
                                     "Save Dashboard", icon=icon("save"),
                                     onclick = "customplotorder();"),
@@ -291,9 +289,13 @@ customplotcontrols <- function(input, output, session){
   observeEvent(input$select_dataset, {
     
     dataset <- get(input$select_dataset)
-    updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = names(dataset)[4])
-    updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = names(dataset)[5])
-    updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = "")
+
+    updateSelectInput(session, "plot_xvar", choices = names(dataset), 
+                      selected = if(!is_empty(input$plot_xvar))input$plot_xvar else names(dataset)[1])
+    updateSelectInput(session, "plot_yvar", choices = names(dataset), 
+                      selected = if(!is_empty(input$plot_yvar))input$plot_yvar else names(dataset)[2])
+    updateSelectInput(session, "plot_groupvar", choices = names(dataset), 
+                      selected = if(!is_empty(input$plot_groupvar))input$plot_groupvar else names(dataset)[3])
     
   })
   
@@ -356,21 +358,20 @@ customplotcontrols <- function(input, output, session){
       removeUI(i)
     }
     
+    current_ids <<- c()
+    plot_settings <<- NULL
   }
   
   observeEvent(input$btn_dashboard_wissen, {
     
     clear_dashboard()
-    current_ids <<- c()
-    plot_settings <<- NULL
     
   })
   
   observeEvent(input$btn_load_dashboard,{
     
     clear_dashboard()
-    current_ids <<- c()
-    plot_settings <<- NULL
+    
     thisdash <- input$select_dashboard
 
     out <- load_dashboard(thisdash)
@@ -402,8 +403,6 @@ customplotcontrols <- function(input, output, session){
                                               label=HTML("&times;"), class="plotbutton"),
                                  actionButton(ns(id_editbutton), 
                                               label="", icon=icon("edit"), class="plotbutton"),
-                                 # actionButton(ns(id_downloadbutton), 
-                                 #              label="", icon=icon("download"), class="plotbutton"),
                                  plotOutput(ns(id_plot), height = "280px")
                         )
                )
@@ -436,18 +435,14 @@ customplotcontrols <- function(input, output, session){
     
     update_inputs <- function(a, session){
       
-      updateSelectInput(session, "select_data", 
-                        selected = a$dataset)
       
-      updateSelectInput(session, "plot_xvar", 
-                              selected = a$xvar)
+      updateSelectInput(session, "select_dataset", selected = a$dataset)
       
-      updateSelectInput(session, "plot_yvar", 
-                              selected = a$yvar)
+      dataset <- get(a$dataset)
+      updateSelectInput(session, "plot_xvar", choices = names(dataset), selected = a$xvar)
+      updateSelectInput(session, "plot_yvar", choices = names(dataset), selected = a$yvar)
+      updateSelectInput(session, "plot_groupvar", choices = names(dataset), selected = a$groupvar)
       
-      updateSelectInput(session, "plot_groupvar", 
-                              selected = a$groupvar)
-
       updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
       
       if(a$groupvar == ""){
@@ -500,11 +495,13 @@ customplotcontrols <- function(input, output, session){
       for(i in 1:12){
         updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
       }
+      
     }
     
     observeEvent(input[[id_editbutton]], {
 
       update_inputs(plot_settings[[id_container]], session)
+      
       rv$current_id_container <- id_container
       rv$current_id_plot <- id_plot
       
