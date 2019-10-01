@@ -16,17 +16,24 @@ is_empty <- function(x){
   is.null(x) || x == "" || length(x) == 0
 }
 
-side_by_side <- function(...){
+side_by_side <- function(..., vertical_align = FALSE){
+  
+  css <- "display: inline-block;"
+  if(vertical_align)css <- paste(css, "vertical-align: top;")
   
   mc <- list(...)
   lapply(mc, function(x){
     
-    tags$div(style="display: inline-block;", x)  
+    tags$div(style= css, x)  
     
   })
   
 }
 
+
+float_right <- function(...){
+  tags$div(style = "float: right;", ...)
+}
 
 save_dashboard <- function(dashboard, name){
   

@@ -79,12 +79,14 @@ customplotcontrolsUI <- function(id){
                        textInput(ns("plot_xlab"), "X-axis label"),
                        textInput(ns("plot_ylab"), "Y-axis label"),
                        textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend")),
-                       numericInput(ns("num_labelsize"), 
-                                    label_tooltip("Font size","Adjusts the base font size, affects all text"),
-                                    min =8, max=20, value=12),
-                       numericInput(ns("num_labelmargin"),
-                                    label_tooltip("Label margin","Space between axis and axis labels"),
-                                    min = 0, max=10, value=2),
+                       side_by_side(
+                         numericInput(ns("num_labelsize"), 
+                                      label_tooltip("Font size","Adjusts the base font size, affects all text"),
+                                      min =8, max=20, value=12),
+                         numericInput(ns("num_labelmargin"),
+                                      label_tooltip("Label margin","Space between axis and axis labels"),
+                                      min = 0, max=10, value=2)
+                       ),
                        side_by_side(
                          selectInput(ns("sel_labelanglex"), 
                                      "Rotation X",
@@ -94,8 +96,10 @@ customplotcontrolsUI <- function(id){
                                                    "Axis label rotation. Select 90 for labels perpendicular to axis"),
                                      choices = c(0,90), width = "148px")
                        ),
-                       checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
-                       checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px"),
+                       side_by_side(
+                         checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
+                         checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px")
+                       ),
                        tags$br()
                        
                 ),
@@ -432,31 +436,51 @@ customplotcontrols <- function(input, output, session){
     
     if(!is.null(interactive)){
       
-      if(!is_empty(interactive$variable1)){
+      make_interactive_element <- function(i){
         
-        column_data <- data[,interactive$variable1][[1]]
+        varlab <- paste0("variable",i)
+        ellab <- paste0("element",i)
         
-        if(interactive$element1 == "selectInput"){
-          el <- shinyWidgets::pickerInput(ns(id_interactive[1]), 
-                            label = interactive$variable1,
-                            choices = unique(column_data),
-                            selected = unique(column_data),
-                            multiple = TRUE,
-                            options = list(`actions-box` = TRUE,
-                                           `selected-text-format` = "count > 3")
-          )
+        if(is_empty(interactive[[varlab]])){
+          return(NULL)
         } else {
-          el <- sliderInput(ns(id_interactive[1]),
-                            label = interactive$variable1,
-                            min = min(column_data, na.rm=TRUE),
-                            max = max(column_data, na.rm=TRUE),
-                            value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE))
-                            )
+          
+          column_data <- data[,interactive[[varlab]]][[1]]
+          
+          if(interactive[[ellab]] == "selectInput"){
+            el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
+                              label = interactive[[varlab]],
+                              choices = unique(column_data),
+                              selected = unique(column_data),
+                              multiple = TRUE,
+                              options = list(`actions-box` = TRUE,
+                                             `selected-text-format` = "count > 3"),
+                              width = "180px"
+            )
+          } else {
+            el <- sliderInput(ns(id_interactive[i]),
+                              label = interactive[[varlab]],
+                              min = min(column_data, na.rm=TRUE),
+                              max = max(column_data, na.rm=TRUE),
+                              value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE)),
+                              width = "180px"
+                              )
+          }
+          
+          
+          return(el)
         }
-        
-        inner_content <- c(inner_content, list(el))
-                           
       }
+      
+      inner_content <- c(inner_content, list(
+        side_by_side(
+          make_interactive_element(1),
+          tags$div(style="width:20px;"),
+          make_interactive_element(2),
+          vertical_align = TRUE
+        )
+      ))
+      
       
     }
     
