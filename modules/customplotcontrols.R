@@ -183,8 +183,6 @@ customplotcontrolsUI <- function(id){
                 )
               ),
             
-              tags$br(),
-              tags$br(),
               tags$hr(),
               actionButton(ns("btn_addplot"), 
                            label_tooltip("Make plot","Add plot to dashboard"), 
@@ -235,8 +233,9 @@ customplotcontrols <- function(input, output, session){
   
   read_interactive_controls <- function(){
     
+    #req(input$ia_select_nelements)
 
-    if(input$ia_select_nelements == "0" | is_empty(input$ia_select_variable1)){
+    if(is_empty(input$ia_select_variable1) || input$ia_select_nelements == "0"){
       
       return(NULL)
       
@@ -600,13 +599,9 @@ customplotcontrols <- function(input, output, session){
   }
   
   observeEvent(input$btn_addplot, {
-    
-    if(is_empty(input$plot_xvar) | is_empty(input$plot_yvar)){
-      output$txt_info <- renderText({"First Select X and Y variables"})
-    } else {
+ 
       add_widget()  
       shinyjs::hide("btn_updateplot")
-    }
     
   })
 
