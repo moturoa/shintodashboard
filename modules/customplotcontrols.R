@@ -290,9 +290,9 @@ customplotcontrols <- function(input, output, session){
       labelangley =  input$sel_labelangley,
       nolabelsx = input$chk_removelabelsx,
       nolegend =  input$chk_nolegend,
-      filters = list(input$filterx1, input$filterx2, input$filterx3, 
-                     input$filtery1, input$filtery2, input$filtery3, 
-                     input$filterg1, input$filterg2, input$filterg3),
+      filters = list(input$filterx1, input$filterx2, input$filterx3, input$filterx4,
+                     input$filtery1, input$filtery2, input$filtery3, input$filtery4,
+                     input$filterg1, input$filterg2, input$filterg3, input$filterg4),
       interactive = read_interactive_controls()
       
     )
@@ -533,21 +533,23 @@ customplotcontrols <- function(input, output, session){
         updateCheckboxInput(session, "chk_usegroup",value = FALSE)
       }
       
-      update_filter <- function(id,i,numeric){
+      update_filter <- function(id,i,type){
         if(!is.null(input[[id]])){
-          if(numeric){
+          if(type == "numeric"){
             updateNumericInput(session, id, value = a$filters[i])
-          } else {
+          } else if(type == "factor"){
             updateSelectInput(session, id, selected = a$filters[i])
+          } else if(type == "date"){
+            updateDateRangeInput(session, id, start = a$filters[i][1], end = a$filters[i][2])
           }
         }
       }
       
-      fs <- c("filterx1", "filterx2", "filterx3", 
-              "filtery1", "filtery2", "filtery3", 
-              "filterg1", "filterg2", "filterg3")
+      fs <- c("filterx1", "filterx2", "filterx3", "filterx4", 
+              "filtery1", "filtery2", "filtery3", "filtery4", 
+              "filterg1", "filterg2", "filterg3", "filterg4")
       
-      type <- rep(c(TRUE,TRUE,FALSE),3)
+      type <- rep(c("numeric","numeric","factor","date"), times = 3)
       for(i in seq_along(fs)){
         update_filter(fs[i], i, type[i])
       }
@@ -611,23 +613,43 @@ customplotcontrols <- function(input, output, session){
         
       make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
         data <- data[!is.na(data)]
-        if(!force_factor && is.numeric(data)){
-          tagList(
-            h4(label),
-            side_by_side(
-              numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width="100px"),
-              numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width="100px")
-            ),
-            br()
-          ) 
-        } else {
+        
+        if(force_factor | is.factor(data)){
+          
           tagList(
             h4(label),
             selectInput(session$ns(glue("{idbase}3")), "Choices", choices = sort(unique(data)), multiple=TRUE)
           )
+          
+        } else {
+          
+          if(is.numeric(data)){
+            
+            tagList(
+              h4(label),
+              side_by_side(
+                numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width="100px"),
+                numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width="100px")
+              ),
+              br()
+            ) 
+            
+          }
+          
+          if(inherits(data, "Date")){
+            
+            tagList(
+              h4(label),
+              dateRangeInput(session$ns(glue("{idbase}4")), "", start = min(data), end = max(data),
+                             format = "dd/mm/yy", language = "nl")
+            )
+            
+          }
+          
         }
       }
-      
+        
+
       tagList(
         make_controls(current_dataset()[[input$plot_xvar]], "X variable", 
                       idbase="filterx", force_factor = input$chk_factor_x),
@@ -716,11 +738,19 @@ customplotcontrols <- function(input, output, session){
     args <- read_plot_settings()
     plot_settings[[rv$current_id_container]] <<- args
     
+    # ids of the interactive elements on the current container, if any
+    id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)
+    
     output[[rv$current_id_plot]] <- renderPlot({
       
+      # settings of those interactive elements
+      interactive_vals <- list(input[[id_interactive[1]]], 
+                               input[[id_interactive[2]]])
+      
       isolate(
-        custom_plot(args)
+        custom_plot(plotarguments = args, interactive = interactive_vals)
       )
+      
     }, height = 280)
     
   })
