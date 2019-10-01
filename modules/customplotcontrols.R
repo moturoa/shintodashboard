@@ -236,7 +236,7 @@ customplotcontrols <- function(input, output, session){
   read_interactive_controls <- function(){
     
 
-    if(is_empty(input$ia_select_variable1)){
+    if(input$ia_select_nelements == "0" | is_empty(input$ia_select_variable1)){
       
       return(NULL)
       
@@ -668,16 +668,28 @@ customplotcontrols <- function(input, output, session){
     
     
     tagList(
-      h4("Interactive element 1"),
-      selectInput(ns("ia_select_input1"), 
-                  "Selector type",
-                  choices = list("None" = "",
-                                 "Select category" = "selectInput",
-                                 "Numeric slider" = "sliderInput")),
+      
+      awesomeRadio(ns("ia_select_nelements"),
+                   "Number of interactive elements",
+                   choices = c("0","1","2"),
+                   selected = "0",
+                   inline=TRUE),
+      
+      
       shinyjs::hidden(
-        selectInput(ns("ia_select_variable1"), 
-                    "Affected variable",
-                    choices = c("", current_available_columns()))
+        tags$div(id = ns("interactive_panel_1"),
+          h4("Interactive element 1"),
+          selectInput(ns("ia_select_input1"), 
+                      "Selector type",
+                      choices = list("None" = "",
+                                     "Select category" = "selectInput",
+                                     "Numeric slider" = "sliderInput")),
+          shinyjs::hidden(
+            selectInput(ns("ia_select_variable1"), 
+                        "Affected variable",
+                        choices = c("", current_available_columns()))
+          )
+        )
       ),
       
       
@@ -702,6 +714,27 @@ customplotcontrols <- function(input, output, session){
   
   observe({
     
+    nel <- as.numeric(input$ia_select_nelements)
+    req(nel)
+    
+    if(nel == 0){
+      shinyjs::hide("interactive_panel_1")
+      shinyjs::hide("interactive_panel_2")
+    }
+    if(nel == 1){
+      shinyjs::show("interactive_panel_1")
+      shinyjs::hide("interactive_panel_2")
+    }
+    if(nel == 2){
+      shinyjs::show("interactive_panel_1")
+      shinyjs::show("interactive_panel_2")
+    }
+    
+    
+  })
+  
+  observe({
+    
     sel <- input$ia_select_input1
     req(sel)
     
@@ -710,19 +743,7 @@ customplotcontrols <- function(input, output, session){
     }
     
   })
-  
-  observe({
-    
-    sel <- input$ia_select_variable1
-    req(sel)
-    
-    if(sel != "None"){
-      shinyjs::show("interactive_panel_2")
-    }
-    
-  })
 
-  
   observe({
     
     sel <- input$ia_select_input2
