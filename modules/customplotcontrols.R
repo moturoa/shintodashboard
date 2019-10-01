@@ -435,13 +435,16 @@ customplotcontrols <- function(input, output, session){
       
       if(!is_empty(interactive$variable1)){
         
-        column_data <- data[interactive$variable1]
+        column_data <- data[,interactive$variable1][[1]]
         
         if(interactive$element1 == "selectInput"){
-          el <- selectInput(ns(id_interactive[1]), 
+          el <- shinyWidgets::pickerInput(ns(id_interactive[1]), 
                             label = interactive$variable1,
+                            choices = unique(column_data),
+                            selected = unique(column_data),
                             multiple = TRUE,
-                            choices = unique(column_data)
+                            options = list(`actions-box` = TRUE,
+                                           `selected-text-format` = "count > 3")
           )
         } else {
           el <- sliderInput(ns(id_interactive[1]),
@@ -457,7 +460,6 @@ customplotcontrols <- function(input, output, session){
       }
       
     }
-    
     
     withTags(
       div(id = id_container,  class = "customplot col-sm-6", 
