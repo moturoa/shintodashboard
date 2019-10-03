@@ -635,11 +635,11 @@ customplotcontrols <- function(input, output, session){
       make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
         data <- data[!is.na(data)]
         
-        if(force_factor | is.factor(data)){
+        if(force_factor | is.factor(data) | is.character(data)){
           
           tagList(
             h4(label),
-            selectInput(session$ns(glue("{idbase}3")), "Choices", choices = sort(unique(data)), multiple=TRUE)
+            selectInput(session$ns(glue("{idbase}3")), "", choices = sort(unique(data)), multiple=TRUE)
           )
           
         } else {

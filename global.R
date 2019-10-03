@@ -1,25 +1,6 @@
 
 
-# remotes::install_bitbucket("shintolabs/shintoplotwrappers", 
-#                            auth_user="remko_duursma", 
-#                            password="<<MYPASSWORD>>")
-library(shintoplotwrappers)
-
-library(ggplot2)
-library(lgrdata)
-library(shiny)
-library(dplyr)
-library(glue)
-library(shinyjs)
-library(shinyjqui)
-library(shinydashboard)
-library(shinyWidgets)
-# library(plotly)
-library(RColorBrewer)
-library(ggthemes)
-library(colourpicker)
-
-data(automobiles)
+source("R/load_packages.R")
 
 available_rds <- c("primavera_fasering_20191030.rds", 
 	                     "primavera_overzicht_20191030.rds")
