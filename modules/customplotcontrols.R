@@ -7,60 +7,70 @@ customplotcontrolsUI <- function(id){
       column(4, id = "panel_controls",
            
             tabsetPanel( id = "controls_tab_box", type = "pills",
-                tabPanel("Data",
+                tabPanel("Start",
                 
                        selectInput(ns("select_dataset"), "Dataset", 
                                    choices = available_datasets),
                        
-                       side_by_side(
-                        selectInput(ns("plot_xvar"), 
-                                    label = label_tooltip("X Variable", "Select variable to plot along the X-axis"),
-                                   choices = "", selected = ""),
-                        checkboxInput(ns("chk_factor_x"), "Force factor", value = FALSE, width="50px")
-                       ),
-                       tags$br(),
-                       side_by_side(
-                         selectInput(ns("plot_yvar"), 
-                                     label = label_tooltip("Y Variable", "Select variable to plot along the X-axis"),
-                                     choices = "", selected = ""),
-                         checkboxInput(ns("chk_factor_y"), 
-                                       "Force factor",
-                                        value = FALSE, width="50px")
-                       ),
-                       tags$br(),
-                       checkboxInput(ns("chk_usegroup"), "Use grouping"),
-                       selectInput(ns("plot_groupvar"), 
-                                   label = label_tooltip("Grouping Variable", "Select variable for colors or bar segments"),
-                                   choices = "", selected = "")
-
-                ),       
-                tabPanel("Plot type",
                        
                        selectInput(ns("plot_type"), "Plot type", 
-                                   choices = c("Scatter", "Barplot", "Stacked barplot", "Pie chart"),
+                                   choices = c("Barplot", "Stacked barplot", "Scatter", "Pie chart"),
                                    selected = "Barplot"),
+                       
                        shinyjs::hidden(
                          
                          selectInput(ns("scatter_shape"), "Markers", 
                                      choices = c("circles","squares"))
                          
                        ),
-                       
-                       shinyjs::hidden(
-                        selectInput(ns("plot_stat"), 
-                                    label_tooltip("Functie", "For barplots, the function used to aggregate the data into bars"),
-                                    choices = c("mean","count","max", "sum"),
-                                    selected = "sum")
-                       ),
-                       
+
                        shinyjs::hidden(
                          radioButtons(ns("pietype"), "Pie chart type",
                                       choices = c("Pie","Waffle"), selected = "Waffle")
                        ),
                        shinyjs::hidden(
                          checkboxInput(ns("pienarm"), "Remove missing values (NA)",value = FALSE)
-
+                         
                        )
+                       
+                ),       
+                tabPanel("Columns",
+                     
+                       tags$h4("X-axis"),
+                       side_by_side(
+                         selectInput(ns("plot_xvar"), 
+                                     label = "",
+                                     choices = "", selected = ""),
+                         checkboxInput(ns("chk_factor_x"), "Force factor", value = FALSE, width="50px")
+                       ),
+                       tags$br(),
+                       tags$h4("Y-axis"),
+                       tags$div(id = ns("yvar_box"),
+                                side_by_side(
+                                  selectInput(ns("plot_yvar"), 
+                                              label = label_tooltip("Y Variable", "Select Y-axis variable"),
+                                              choices = "", selected = ""),
+                                  checkboxInput(ns("chk_factor_y"), 
+                                                "Force factor",
+                                                value = FALSE, width="50px")
+                                )
+                       ),
+                       shinyjs::hidden(
+                         selectInput(ns("plot_stat"), 
+                                     label_tooltip("Function", "The function used to aggregate the Y-data into bars"),
+                                     choices = c("Sum of Y" = "sum", "Mean of Y" = "mean","Count rows of X" = "count"),
+                                     selected = "sum")
+                       ),
+                       
+
+                       tags$br(),
+                       checkboxInput(ns("chk_usegroup"), "Use grouping"),
+                       shinyjs::hidden(
+                         selectInput(ns("plot_groupvar"), 
+                                     label = label_tooltip("Grouping Variable", "Select variable for colors or bar segments"),
+                                     choices = "", selected = "")
+                       )
+                       
                        
                 ),
                 tabPanel("Filter",
@@ -366,6 +376,25 @@ customplotcontrols <- function(input, output, session){
       shinyjs::show("pienarm")
     }
     
+  })
+  
+  observe({
+    print(input$plot_stat)
+    if(input$plot_stat == "count"){
+      shinyjs::hide("yvar_box")
+    } else {
+      shinyjs::show("yvar_box")
+    }
+    
+  })
+  
+  observe({
+    
+    if(input$chk_usegroup){
+      shinyjs::show("plot_groupvar")
+    } else {
+      shinyjs::hide("plot_groupvar")
+    }
   })
   
   observeEvent(input$btn_reset, {
