@@ -82,11 +82,12 @@ customplotcontrolsUI <- function(id){
                        side_by_side(
                          numericInput(ns("num_labelsize"), 
                                       label_tooltip("Font size","Adjusts the base font size, affects all text"),
-                                      min =8, max=20, value=12),
+                                      min =8, max=20, value=12, width = "148px"),
                          numericInput(ns("num_labelmargin"),
                                       label_tooltip("Label margin","Space between axis and axis labels"),
-                                      min = 0, max=10, value=2)
+                                      min = 0, max=10, value=2, width = "148px")
                        ),
+                       br(),
                        side_by_side(
                          selectInput(ns("sel_labelanglex"), 
                                      "Rotation X",
@@ -96,8 +97,10 @@ customplotcontrolsUI <- function(id){
                                                    "Axis label rotation. Select 90 for labels perpendicular to axis"),
                                      choices = c(0,90), width = "148px")
                        ),
-                       side_by_side(
+                       br(),
+                       side_by_side(vertical_align = TRUE,
                          checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
+                         tags$div(style = "width: 30px;"),
                          checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px")
                        ),
                        tags$br()
@@ -248,8 +251,10 @@ customplotcontrols <- function(input, output, session){
       list(
         element1 = input$ia_select_input1,
         variable1 = input$ia_select_variable1,
+        label1 = input$ia_element_label1,
         element2 = input$ia_select_input2,
-        variable2 = input$ia_select_variable2
+        variable2 = input$ia_select_variable2,
+        label2 = input$ia_element_label2
         
       )
       
@@ -440,6 +445,7 @@ customplotcontrols <- function(input, output, session){
         
         varlab <- paste0("variable",i)
         ellab <- paste0("element",i)
+        label <- paste0("label",i)
         
         if(is_empty(interactive[[varlab]])){
           return(NULL)
@@ -449,22 +455,30 @@ customplotcontrols <- function(input, output, session){
           
           if(interactive[[ellab]] == "selectInput"){
             el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
-                              label = interactive[[varlab]],
+                              label = interactive[[label]],
                               choices = unique(column_data),
                               selected = unique(column_data),
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `selected-text-format` = "count > 3"),
-                              width = "180px"
+                              width = "200px"
             )
-          } else {
+          } else if(interactive[[ellab]] == "sliderInput"){
             el <- sliderInput(ns(id_interactive[i]),
-                              label = interactive[[varlab]],
+                              label = interactive[[label]],
                               min = min(column_data, na.rm=TRUE),
                               max = max(column_data, na.rm=TRUE),
                               value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE)),
-                              width = "180px"
+                              width = "200px"
                               )
+          } else if(interactive[[ellab]] == "dateRangeInput") {
+            el <- dateRangeInput(ns(id_interactive[i]),
+                              label = interactive[[label]],
+                              start = min(column_data, na.rm=TRUE),
+                              end = max(column_data, na.rm=TRUE),
+                              # value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE)),
+                              width = "200px"
+            )
           }
           
           
@@ -637,7 +651,7 @@ customplotcontrols <- function(input, output, session){
         
         if(force_factor | is.factor(data) | is.character(data)){
           
-          tagList(
+          el <- tagList(
             h4(label),
             selectInput(session$ns(glue("{idbase}3")), "", choices = sort(unique(data)), multiple=TRUE)
           )
@@ -646,7 +660,8 @@ customplotcontrols <- function(input, output, session){
           
           if(is.numeric(data)){
             
-            tagList(
+            
+            el <- tagList(
               h4(label),
               side_by_side(
                 numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width="100px"),
@@ -659,7 +674,7 @@ customplotcontrols <- function(input, output, session){
           
           if(inherits(data, "Date")){
             
-            tagList(
+            el <- tagList(
               h4(label),
               dateRangeInput(session$ns(glue("{idbase}4")), "", start = min(data), end = max(data),
                              format = "dd/mm/yy", language = "nl")
@@ -668,9 +683,9 @@ customplotcontrols <- function(input, output, session){
           }
           
         }
+        return(el)
       }
         
-
       tagList(
         make_controls(current_dataset()[[input$plot_xvar]], "X variable", 
                       idbase="filterx", force_factor = input$chk_factor_x),
@@ -702,11 +717,15 @@ customplotcontrols <- function(input, output, session){
                       "Selector type",
                       choices = list("None" = "",
                                      "Select category" = "selectInput",
-                                     "Numeric slider" = "sliderInput")),
+                                     "Numeric slider" = "sliderInput",
+                                     "Date range" = "dateRangeInput")),
           shinyjs::hidden(
-            selectInput(ns("ia_select_variable1"), 
-                        "Affected variable",
-                        choices = c("", current_available_columns()))
+            tags$div(id = ns("ia_select_variable_box1"),
+              selectInput(ns("ia_select_variable1"), 
+                          "Affected variable",
+                          choices = c("", current_available_columns())),
+              textInput(ns("ia_element_label1"), "Label")
+            )
           )
         )
       ),
@@ -719,11 +738,15 @@ customplotcontrols <- function(input, output, session){
                       "Selector type",
                       choices = list("None" = "",
                                      "Select category" = "selectInput",
-                                     "Numeric slider" = "sliderInput")),
+                                     "Numeric slider" = "sliderInput",
+                                     "Date range" = "dateRangeInput")),
           shinyjs::hidden(
-            selectInput(ns("ia_select_variable2"), 
-                        "Affected variable",
-                        choices = c("", current_available_columns()))
+            tags$div(id = ns("ia_select_variable_box2"),
+                     selectInput(ns("ia_select_variable2"), 
+                                 "Affected variable",
+                                 choices = c("", current_available_columns())),
+                     textInput(ns("ia_element_label2"), "Label")
+            )
           )
         )
       )
@@ -757,8 +780,8 @@ customplotcontrols <- function(input, output, session){
     sel <- input$ia_select_input1
     req(sel)
     
-    if(sel != "None"){
-      shinyjs::show("ia_select_variable1")
+    if(!sel %in% c("","None")){
+      shinyjs::show("ia_select_variable_box1")
     }
     
   })
@@ -768,8 +791,8 @@ customplotcontrols <- function(input, output, session){
     sel <- input$ia_select_input2
     req(sel)
     
-    if(sel != ""){
-      shinyjs::show("ia_select_variable2")
+    if(!sel %in% c("","None")){
+      shinyjs::show("ia_select_variable_box2")
     }
     
   })

@@ -2,8 +2,7 @@
 
 source("R/load_packages.R")
 
-available_rds <- c("primavera_fasering_20191030.rds", 
-	                     "primavera_overzicht_20191030.rds")
+available_rds <- dir("data")
 
 available_datasets <- tools::file_path_sans_ext(basename(available_rds))
 
