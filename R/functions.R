@@ -12,6 +12,14 @@ random_word <- function(n = 6){
   
 }
 
+null_to_empty <- function(x){
+  if(is.null(x)) {
+    ""
+  } else {
+    x
+  }
+}
+
 is_empty <- function(x){
   is.null(x) || x == "" || length(x) == 0
 }
@@ -47,7 +55,7 @@ save_dashboard <- function(dashboard, name){
 
 load_dashboard <- function(id){
   fn_out <- file.path("cache", paste0(id, ".json"))
-  jsonlite::fromJSON(fn_out)
+  jsonlite::fromJSON(fn_out, simplifyDataFrame = FALSE)
 }
 
 list_dashboards <- function(){

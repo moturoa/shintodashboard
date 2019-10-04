@@ -12,6 +12,7 @@ ui <- fluidPage(
   includeCSS("www/style.css"),
   includeScript("www/tooltip.js"),
   includeScript("www/plotorder.js"),
+  #includeScript("www/confirmclose.js"),
   
   customplotcontrolsUI("controls")
   

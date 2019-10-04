@@ -145,14 +145,7 @@ customplotcontrolsUI <- function(id){
                                    choices = color_palettes, 
                                    selected = "rich.colors", width = "300px")
                       ),
-                      # tags$br(),
-                      # side_by_side(
-                      #   checkboxInput(ns("chk_canva"), "", value = FALSE, width = "60px"),
-                      #   selectInput(ns("select_palette2"),
-                      #              "Color palette (canva.com) (4 colors)",
-                      #              choices = sort(names(canva_palettes)),
-                      #              selected = "", width = "300px")
-                      # ),
+
                       tags$br(),
                       side_by_side(
                         actionButton(ns("btn_load_palette"), 
@@ -316,7 +309,7 @@ customplotcontrols <- function(input, output, session){
       ylab = input$plot_ylab,
       glab = input$plot_glab,
       statfun = input$plot_stat,
-      pietype = tolower(input$pietype),
+      pietype = input$pietype,
       pienarm = input$pienarm,
       palette = read_palette(),
       shape = input$scatter_shape,
@@ -405,7 +398,7 @@ customplotcontrols <- function(input, output, session){
   })
   
   observe({
-    print(input$plot_stat)
+    
     if(input$plot_stat == "count"){
       shinyjs::hide("yvar_box")
     } else {
@@ -431,14 +424,6 @@ customplotcontrols <- function(input, output, session){
       shinyjs::hide("bar_position")
     }
     
-  })
-  
-  
-  observeEvent(input$btn_reset, {
-    shinyjs::reset("panel_controls")
-    updateSelectInput(session, "plot_xvar", selected = "")
-    updateSelectInput(session, "plot_yvar", selected = "")
-    updateSelectInput(session, "plot_groupvar", selected = "")
   })
   
   observeEvent(input$chk_colorbrewer, {
@@ -625,27 +610,42 @@ customplotcontrols <- function(input, output, session){
     
     update_inputs <- function(a, session){
       
-      
+      # Panel 1 - Start
       updateSelectInput(session, "select_dataset", selected = a$dataset)
       
-      updateSelectInput(session, "plot_xvar", choices = current_available_columns(), selected = a$xvar)
-      updateSelectInput(session, "plot_yvar", choices = current_available_columns(), selected = a$yvar)
-      updateSelectInput(session, "plot_groupvar", choices = current_available_columns(), selected = a$groupvar)
+      # Make sure to load data first; reactive current_dataset() has not updated yet.
+      current_columns <- names(get(a$dataset))
       
-      updateCheckboxInput(session, "chk_usegroup",value = as.logical(a$usegroup))
+      updateSelectInput(session, "plot_type", selected = a$plottype)
+      updateAwesomeRadio(session,  "bar_position", selected = a$bar_position)
+      updateSelectInput(session, "scatter_shape", selected = a$shape)
+      updateCheckboxInput(session, "pienarm", value = as.logical(a$pienarm))
+      updateSelectInput(session, "pietype", selected = a$pietype)
+      
+      # Panel 2 - Columns
+      updateSelectInput(session, "plot_xvar", choices = current_columns, selected = a$xvar)
+      updateSelectInput(session, "plot_yvar", choices = current_columns, selected = a$yvar)
+      updateCheckboxInput(session, "chk_factor_x", value = as.logical(a$factor_x))
+      updateCheckboxInput(session, "chk_factor_y", value = as.logical(a$factor_y))
+      
+      updateSelectInput(session, "plot_stat", selected = a$statfun)
+      updateCheckboxInput(session, "chk_usegroup", value = as.logical(a$usegroup))
+      updateSelectInput(session, "plot_groupvar", choices = current_columns, selected = a$groupvar)
       
       if(a$groupvar == ""){
         updateCheckboxInput(session, "chk_usegroup",value = FALSE)
       }
       
+      # Panel 3 - Filters
       update_filter <- function(id,i,type){
-        if(!is.null(input[[id]])){
+        
+        if(length(a$filters[[i]])){
           if(type == "numeric"){
-            updateNumericInput(session, id, value = a$filters[i])
+            updateNumericInput(session, id, value = a$filters[[i]])
           } else if(type == "factor"){
-            updateSelectInput(session, id, selected = a$filters[i])
+            updateSelectInput(session, id, selected = a$filters[[i]])
           } else if(type == "date"){
-            updateDateRangeInput(session, id, start = a$filters[i][1], end = a$filters[i][2])
+            updateDateRangeInput(session, id, start = a$filters[[i]][1], end = a$filters[[i]][2])
           }
         }
       }
@@ -658,34 +658,32 @@ customplotcontrols <- function(input, output, session){
       for(i in seq_along(fs)){
         update_filter(fs[i], i, type[i])
       }
-            
-      updateSelectInput(session, "plot_type", 
-                        selected = a$plottype)
-      updateSelectInput(session, "scatter_shape", 
-                        selected = a$shape)
-      updateSelectInput(session, "plot_stat", 
-                        selected = a$statfun)
       
+      # Panel 4 - Interactive
+      
+      
+      # Panel 5 - Labels
+      updateTextInput(session, "plot_title", value = null_to_empty(a$title))
+      updateTextInput(session, "plot_subtitle", value = null_to_empty(a$subtitle))
       updateTextInput(session, "plot_xlab", value = a$xlab)
       updateTextInput(session, "plot_ylab", value = a$ylab)
       updateTextInput(session, "plot_glab", value = a$glab)
-      
-      maybe <- function(x){
-        if(is.null(x)) {
-          ""
-        } else {
-          x
-        }
-      }
-      updateTextInput(session, "plot_title", value = maybe(a$title))
-      updateTextInput(session, "plot_subtitle", value = maybe(a$subtitle))
-      
       updateNumericInput(session, "num_labelsize", value = a$labelsize)
       updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
+      updateCheckboxInput(session, "chk_includezerox", value = as.logical(a$includezerox))
+      updateCheckboxInput(session, "chk_includezeroy", value = as.logical(a$includezeroy))
+      updateSelectInput(session, "sel_labelanglex", selected = a$labelanglex)
+      updateSelectInput(session, "sel_labelangley", selected = a$labelangley)
+      updateCheckboxInput(session, "chk_removelabelsx", value = as.logical(a$nolabelsx))
+      updateCheckboxInput(session, "chk_nolegend", value = as.logical(a$nolegend))
       
+      # Panel 6 - Colors
       for(i in 1:12){
         updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
       }
+      
+      # Panel 7 - Theme
+      updateSelectInput(session, "select_theme", selected = a$theme)
       
     }
     
