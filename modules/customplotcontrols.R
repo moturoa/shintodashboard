@@ -14,8 +14,17 @@ customplotcontrolsUI <- function(id){
                        
                        
                        selectInput(ns("plot_type"), "Plot type", 
-                                   choices = c("Barplot", "Stacked barplot", "Scatter", "Pie chart"),
+                                   choices = c("Barplot", "Scatter", "Pie chart"),
                                    selected = "Barplot"),
+                       
+                       shinyjs::hidden(
+                         
+                         awesomeRadio(ns("bar_position"), "Bar groups position",
+                                      choices = c("Stacked","Grouped"),
+                                      selected = "Stacked", inline=TRUE)
+                         
+                         
+                       ),
                        
                        shinyjs::hidden(
                          
@@ -130,20 +139,20 @@ customplotcontrolsUI <- function(id){
                 tabPanel("Colors",
                       
                       side_by_side(
-                       checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
+                       #checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
                        selectInput(ns("select_palette"), 
-                                   "Color palette (Color Brewer) (>8 colors)",
-                                   choices = rownames(brewer.pal.info), 
-                                   selected = "Dark2", width = "300px")
+                                   "Color palette",
+                                   choices = color_palettes, 
+                                   selected = "rich.colors", width = "300px")
                       ),
-                      tags$br(),
-                      side_by_side(
-                        checkboxInput(ns("chk_canva"), "", value = FALSE, width = "60px"),
-                        selectInput(ns("select_palette2"),
-                                   "Color palette (canva.com) (4 colors)",
-                                   choices = sort(names(canva_palettes)),
-                                   selected = "", width = "300px")
-                      ),
+                      # tags$br(),
+                      # side_by_side(
+                      #   checkboxInput(ns("chk_canva"), "", value = FALSE, width = "60px"),
+                      #   selectInput(ns("select_palette2"),
+                      #              "Color palette (canva.com) (4 colors)",
+                      #              choices = sort(names(canva_palettes)),
+                      #              selected = "", width = "300px")
+                      # ),
                       tags$br(),
                       side_by_side(
                         actionButton(ns("btn_load_palette"), 
@@ -166,9 +175,15 @@ customplotcontrolsUI <- function(id){
                         
                       }),
                       tags$br(),
-                      actionButton(ns("btn_erase_palette"), 
-                                   label_tooltip("Erase","Clear all colors"),
-                                   icon = icon("eraser"))
+                      actionButton(ns("btn_randomize_palette"), 
+                                   label_tooltip("Shuffle","Randomly shuffle colors"),
+                                   icon = icon("random")),
+                      tags$hr(),
+                      side_by_side(
+                        textInput(ns("txt_palette_name"), "Save as", width = "200px"),
+                        actionButton(ns("btn_save_palette"), "Save", icon = icon("save"))
+                      )
+                      
                       
                     
                 ),
@@ -272,13 +287,18 @@ customplotcontrols <- function(input, output, session){
     
   }
   
-  
-  read_plot_settings <- function(){
-    
+  read_palette <- function(){
     pal <- c()
     for(i in 1:12){
       pal <- c(pal, input[[paste0("sel_color", i)]])
     }
+    
+  return(pal)
+  }
+  
+  read_plot_settings <- function(){
+    
+
     
     list(
       dataset = input$select_dataset,
@@ -289,6 +309,7 @@ customplotcontrols <- function(input, output, session){
       yvar = as.character(input$plot_yvar),
       usegroup = input$chk_usegroup,
       groupvar = as.character(input$plot_groupvar),
+      bar_position = input$bar_position,
       title = input$plot_title,
       subtitle = input$plot_subtitle,
       xlab = input$plot_xlab,
@@ -297,7 +318,7 @@ customplotcontrols <- function(input, output, session){
       statfun = input$plot_stat,
       pietype = tolower(input$pietype),
       pienarm = input$pienarm,
-      palette = pal,
+      palette = read_palette(),
       shape = input$scatter_shape,
       theme = input$select_theme,
       includezerox = input$chk_includezerox,
@@ -318,12 +339,7 @@ customplotcontrols <- function(input, output, session){
 
   observeEvent(input$btn_load_palette, {
     
-    if(input$chk_colorbrewer){
-      pal <- brewer.pal(8, input$select_palette)
-    }
-    if(input$chk_canva){
-      pal <- canva_palettes[[input$select_palette2]]
-    }
+    pal <- load_palette(input$select_palette)
     
     for(i in seq_along(pal)){
       updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
@@ -331,14 +347,24 @@ customplotcontrols <- function(input, output, session){
       
   })
   
-  observeEvent(input$btn_erase_palette, {
+  observeEvent(input$btn_randomize_palette, {
 
+    new_pal <- sample(read_palette())
+    
     for(i in 1:12){
-      updateColourInput(session, paste0("sel_color",i), value = "white")
+      updateColourInput(session, paste0("sel_color",i), value = new_pal[i])
     }
 
   })
   
+  observeEvent(input$btn_save_palette, {
+    
+    req(input$txt_palette_name)
+    json <- toJSON(read_palette())
+    
+    writeLines(json, file.path("cache/palettes", paste0(input$txt_palette_name, ".json")))
+    updateTextInput(session, "txt_palette_name", value = "")
+  })
   
   observeEvent(input$select_dataset, {
 
@@ -396,6 +422,17 @@ customplotcontrols <- function(input, output, session){
       shinyjs::hide("plot_groupvar")
     }
   })
+  
+  observe({
+    
+    if(input$plot_type == "Barplot"){
+      shinyjs::show("bar_position")
+    } else {
+      shinyjs::hide("bar_position")
+    }
+    
+  })
+  
   
   observeEvent(input$btn_reset, {
     shinyjs::reset("panel_controls")

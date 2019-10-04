@@ -17,4 +17,6 @@ suppressPackageStartupMessages({
   library(RColorBrewer)
   library(ggthemes)
   library(colourpicker)
+  
+  library(jsonlite)
 })

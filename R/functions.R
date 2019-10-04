@@ -57,7 +57,19 @@ list_dashboards <- function(){
 }
 
 
-
+load_palette <- function(pal){
+  
+  if(pal %in% rownames(brewer.pal.info)){
+    brewer.pal(8, pal)
+  } else if(pal == "rich.colors"){
+    gplots::rich.colors(12)
+  } else {
+    fn <- file.path("cache/palettes", paste0(pal, ".json"))
+    fromJSON(fn)
+  }
+  
+  
+}
 
 
 
