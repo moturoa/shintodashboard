@@ -125,6 +125,7 @@ customplotcontrolsUI <- function(id){
                        tags$br()
                        
                 ),
+                
                 tabPanel("Axes",
                 
                          
@@ -135,6 +136,24 @@ customplotcontrolsUI <- function(id){
                                      label_tooltip("Y - include 0", "Start Y-axis at zero"),
                                                     value = FALSE)
                                   
+                ),
+                tabPanel("Annotation",
+                      
+                       checkboxInput(ns("check_annotate_bars"), "Label totals in bars", value = FALSE),
+                         
+                         
+                       tags$hr(),
+                       selectInput(ns("select_annotation"),
+                                   "Type",
+                                   choices = c("", "Horizontal line","Vertical line")),
+                       shinyjs::hidden(
+                         tags$div(id = ns("abline_controls"),
+                           numericInput(ns("num_line_coordinate"), "Crosses axis at:", value = 0),
+                           colourInput(ns("colour_annotation"), "Colour", value = "black")
+                         )
+                       )
+                         
+                         
                 ),
                 tabPanel("Colors",
                       
@@ -205,7 +224,11 @@ customplotcontrolsUI <- function(id){
                                    choices = list_dashboards()),
                        actionButton(ns("btn_load_dashboard"), "Load"),
                        actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard")
-                )
+                ),
+                tabPanel("Debug",
+                         
+                         verbatimTextOutput(ns("txt_debug"))
+                         )
               ),
             
               tags$hr(),
@@ -255,6 +278,9 @@ customplotcontrols <- function(input, output, session){
   
   ns <- session$ns
   
+  output$txt_debug <- renderPrint({
+    reactiveValuesToList(input)
+  })
   
   read_interactive_controls <- function(){
     
@@ -322,6 +348,10 @@ customplotcontrols <- function(input, output, session){
       labelangley =  input$sel_labelangley,
       nolabelsx = input$chk_removelabelsx,
       nolegend =  input$chk_nolegend,
+      annotate_bars = input$check_annotate_bars,
+      annotation_type = input$select_annotation,
+      line_coordinate = input$num_line_coordinate,
+      line_colour = input$colour_annotation,
       filters = list(input$filterx1, input$filterx2, input$filterx3, input$filterx4,
                      input$filtery1, input$filtery2, input$filtery3, input$filtery4,
                      input$filterg1, input$filterg2, input$filterg3, input$filterg4),
@@ -330,6 +360,7 @@ customplotcontrols <- function(input, output, session){
     )
   }
 
+  
   observeEvent(input$btn_load_palette, {
     
     pal <- load_palette(input$select_palette)
@@ -431,13 +462,18 @@ customplotcontrols <- function(input, output, session){
       updateCheckboxInput(session, "chk_canva", value = FALSE)
     }
   })
+
   
-  observeEvent(input$chk_canva, {
+  observe({
     
-    if(as.logical(input$chk_canva)){
-      updateCheckboxInput(session, "chk_colorbrewer", value = FALSE)
-    }
+    item <- input$select_annotation
+    req(item)
+    
+    shinyjs::show("abline_controls")
+    
+      
   })
+
   
   observeEvent(input$btn_save_dashboard, {
     
