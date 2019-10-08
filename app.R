@@ -1,10 +1,5 @@
 
-
 source("global.R")
-source("R/functions.R")
-source("R/tooltip.R")
-source("modules/customplotcontrols.R")
-
 
 ui <- fluidPage(
   

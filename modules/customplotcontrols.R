@@ -90,8 +90,21 @@ customplotcontrolsUI <- function(id){
                          
                 ),
                 tabPanel("Interactive",
+                           
+                       tagList(
+                         awesomeRadio(ns("ia_select_nelements"),
+                                      "Number of interactive elements",
+                                      choices = c("0","1","2"),
+                                      selected = "0",
+                                      inline=TRUE),
                          
-                      uiOutput(ns("interactive_controls"))
+                         shinyjs::hidden(
+                           interactive_panel(1, ns)
+                         ),
+                         shinyjs::hidden(
+                           interactive_panel(2, ns)
+                         )
+                       )
                       
                 ),
                 tabPanel("Labels",
@@ -290,11 +303,13 @@ customplotcontrols <- function(input, output, session){
 
     if(is_empty(input$ia_select_variable1) || input$ia_select_nelements == "0"){
       
-      return(NULL)
+      list(
+        nelements = 0
+      )
       
     } else {
-      
       list(
+        nelements = as.numeric(input$ia_select_nelements),
         element1 = input$ia_select_input1,
         variable1 = input$ia_select_variable1,
         label1 = input$ia_element_label1,
@@ -357,6 +372,7 @@ customplotcontrols <- function(input, output, session){
                      input$filterg1, input$filterg2, input$filterg3, input$filterg4),
       interactive = read_interactive_controls()
       
+      
     )
   }
 
@@ -401,6 +417,10 @@ customplotcontrols <- function(input, output, session){
                       selected = if(!is_empty(input$plot_yvar))input$plot_yvar else cols[2])
     updateSelectInput(session, "plot_groupvar", choices = cols, 
                       selected = if(!is_empty(input$plot_groupvar))input$plot_groupvar else cols[3])
+    
+    updateSelectInput(session, "ia_select_variable1", choices = cols, selected = input$ia_select_variable1)
+    updateSelectInput(session, "ia_select_variable2", choices = cols, selected = input$ia_select_variable2)
+    
     
   })
   
@@ -460,13 +480,6 @@ customplotcontrols <- function(input, output, session){
     
   })
   
-  observeEvent(input$chk_colorbrewer, {
-    if(as.logical(input$chk_colorbrewer)){
-      updateCheckboxInput(session, "chk_canva", value = FALSE)
-    }
-  })
-
-  
   observe({
     
     item <- input$select_annotation
@@ -519,7 +532,7 @@ customplotcontrols <- function(input, output, session){
   
   
   widget_ui <- function(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
-                        interactive, data = NULL){
+                        interactive, interactive_vals=NULL, data = NULL){
     
     inner_content <- list(
       actionButton(ns(id_closebutton), 
@@ -529,25 +542,25 @@ customplotcontrols <- function(input, output, session){
       plotOutput(ns(id_plot), height = "280px")
     )
     
-    if(!is.null(interactive)){
+    if(!(is.null(interactive) || interactive$nelements == 0)){
       
       make_interactive_element <- function(i){
         
         varlab <- paste0("variable",i)
         ellab <- paste0("element",i)
         label <- paste0("label",i)
+        value <- interactive_vals[[i]]
         
         if(is_empty(interactive[[varlab]])){
           return(NULL)
         } else {
-          
           column_data <- data[,interactive[[varlab]]][[1]]
           
           if(interactive[[ellab]] == "selectInput"){
             el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
                               label = interactive[[label]],
                               choices = unique(column_data),
-                              selected = unique(column_data),
+                              selected = if(is.null(value)) unique(column_data) else value,
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `selected-text-format` = "count > 3"),
@@ -558,15 +571,16 @@ customplotcontrols <- function(input, output, session){
                               label = interactive[[label]],
                               min = min(column_data, na.rm=TRUE),
                               max = max(column_data, na.rm=TRUE),
-                              value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE)),
+                              value = if(is.null(value))c(min(column_data, na.rm=TRUE), max(column_data, na.rm=TRUE)) else value,
                               width = "200px"
-                              )
+            )
           } else if(interactive[[ellab]] == "dateRangeInput") {
             el <- shiny::dateRangeInput(ns(id_interactive[i]),
                               label = interactive[[label]],
-                              start = min(column_data, na.rm=TRUE),
-                              end = max(column_data, na.rm=TRUE),
-                              # value = c(min(column_data, na.rm=TRUE),max(column_data, na.rm=TRUE)),
+                              min = min(column_data, na.rm=TRUE),
+                              max = max(column_data, na.rm=TRUE),
+                              start = if(is.null(value))min(column_data, na.rm=TRUE) else value[1],
+                              end = if(is.null(value))max(column_data, na.rm=TRUE) else value[2],
                               width = "200px"
             )
           }
@@ -620,10 +634,20 @@ customplotcontrols <- function(input, output, session){
     insertUI(
       "#placeholder", where = "beforeEnd",
       
-      widget_ui(id_container, id_plot,id_closebutton,id_editbutton,id_interactive,
+      widget_ui(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
                 interactive = plot_settings[[id_container]]$interactive,
+                interactive_vals = plot_settings[[id_container]]$interactive_vals,
                 data = dataset)
     )
+    
+    observe({
+      interactive_vals <- list(input[[id_interactive[1]]], 
+                             input[[id_interactive[2]]])
+      
+      plot_settings[[id_container]]$interactive_vals <<- interactive_vals
+      
+    })
+    
     
     output[[id_plot]] <- renderPlot({
       
@@ -699,8 +723,25 @@ customplotcontrols <- function(input, output, session){
       }
       
       # Panel 4 - Interactive
+      update_interactive_panel <- function(i, a, session){
+        if(!is.null(a$interactive[[glue("element{i}")]])){
+          shinyjs::show(glue("interactive_panel_{i}"))
+          shinyjs::show(glue("ia_select_input{i}"))
+          updateSelectInput(session, glue("ia_select_input{i}"), 
+                            selected = a$interactive[[glue("element{i}")]])
+          shinyjs::show(glue("ia_select_variable_box{i}"))
+          updateSelectInput(session, glue("ia_select_variable{i}"), 
+                            choices = current_columns, 
+                            selected = a$interactive[[glue("variable{i}")]])
+          updateTextInput(session, glue("ia_element_label{i}"), 
+                          value = a$interactive[[glue("label{i}")]])
+        }
+      }
       
-      
+      updateAwesomeRadio(session, "ia_select_nelements", selected = as.character(a$interactive$nelements))
+      update_interactive_panel(1, a, session)
+      update_interactive_panel(2, a, session)
+         
       # Panel 5 - Labels
       updateTextInput(session, "plot_title", value = null_to_empty(a$title))
       updateTextInput(session, "plot_subtitle", value = null_to_empty(a$subtitle))
@@ -729,7 +770,6 @@ customplotcontrols <- function(input, output, session){
     observeEvent(input[[id_editbutton]], {
 
       update_inputs(plot_settings[[id_container]], session)
-      
       rv$current_id_container <- id_container
       rv$current_id_plot <- id_plot
       
@@ -801,62 +841,6 @@ customplotcontrols <- function(input, output, session){
         
   })
 
-  output$interactive_controls <- renderUI({
-    
-    
-    tagList(
-      
-      awesomeRadio(ns("ia_select_nelements"),
-                   "Number of interactive elements",
-                   choices = c("0","1","2"),
-                   selected = "0",
-                   inline=TRUE),
-      
-      
-      shinyjs::hidden(
-        tags$div(id = ns("interactive_panel_1"),
-          h4("Interactive element 1"),
-          selectInput(ns("ia_select_input1"), 
-                      "Selector type",
-                      choices = list("None" = "",
-                                     "Select category" = "selectInput",
-                                     "Numeric slider" = "sliderInput",
-                                     "Date range" = "dateRangeInput")),
-          shinyjs::hidden(
-            tags$div(id = ns("ia_select_variable_box1"),
-              selectInput(ns("ia_select_variable1"), 
-                          "Affected variable",
-                          choices = c("", current_available_columns())),
-              textInput(ns("ia_element_label1"), "Label")
-            )
-          )
-        )
-      ),
-      
-      
-      shinyjs::hidden(
-        tags$div(id = ns("interactive_panel_2"),
-          h4("Interactive element 2"),
-          selectInput(ns("ia_select_input2"), 
-                      "Selector type",
-                      choices = list("None" = "",
-                                     "Select category" = "selectInput",
-                                     "Numeric slider" = "sliderInput",
-                                     "Date range" = "dateRangeInput")),
-          shinyjs::hidden(
-            tags$div(id = ns("ia_select_variable_box2"),
-                     selectInput(ns("ia_select_variable2"), 
-                                 "Affected variable",
-                                 choices = c("", current_available_columns())),
-                     textInput(ns("ia_element_label2"), "Label")
-            )
-          )
-        )
-      )
-    )
-      
-  })
-  
   observe({
     
     nel <- as.numeric(input$ia_select_nelements)
@@ -874,7 +858,6 @@ customplotcontrols <- function(input, output, session){
       shinyjs::show("interactive_panel_1")
       shinyjs::show("interactive_panel_2")
     }
-    
     
   })
   

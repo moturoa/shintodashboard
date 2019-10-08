@@ -1,6 +1,11 @@
 
 
 source("R/load_packages.R")
+source("R/functions.R")
+source("R/functions_ui.R")
+source("R/tooltip.R")
+source("modules/customplotcontrols.R")
+
 
 if(!dir.exists("cache"))dir.create("cache")
 if(!dir.exists("cache/palettes"))dir.create("cache/palettes")
