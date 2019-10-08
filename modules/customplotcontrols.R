@@ -3,10 +3,13 @@ customplotcontrolsUI <- function(id){
   
   ns <- NS(id)
   
-  fluidRow(
-      column(4, id = "panel_controls",
-           
-            tabsetPanel( id = "controls_tab_box", type = "pills",
+  
+  fluidPage(
+    fluidRow(
+      #column(4, id = "panel_controls",
+           tags$h2("Widget configurator"),
+           tags$hr(),
+            tabsetPanel( id = "controls_tab_box", #type = "pills",
                 tabPanel("Start",
                 
                        selectInput(ns("select_dataset"), "Dataset", 
@@ -22,7 +25,6 @@ customplotcontrolsUI <- function(id){
                          awesomeRadio(ns("bar_position"), "Bar groups position",
                                       choices = c("Stacked","Grouped"),
                                       selected = "Stacked", inline=TRUE)
-                         
                          
                        ),
                        
@@ -108,11 +110,18 @@ customplotcontrolsUI <- function(id){
                       
                 ),
                 tabPanel("Labels",
+                         
+                         
+                     fluidRow(    
+                      column(3,    
                        textInput(ns("plot_title"), "Title"),
                        textInput(ns("plot_subtitle"), "Sub-title"),
                        textInput(ns("plot_xlab"), "X-axis label"),
                        textInput(ns("plot_ylab"), "Y-axis label"),
-                       textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend")),
+                       textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend"))
+                       
+                      ),
+                      column(3, 
                        side_by_side(
                          numericInput(ns("num_labelsize"), 
                                       label_tooltip("Font size","Adjusts the base font size, affects all text"),
@@ -121,7 +130,6 @@ customplotcontrolsUI <- function(id){
                                       label_tooltip("Label margin","Space between axis and axis labels"),
                                       min = 0, max=10, value=2, width = "148px")
                        ),
-                       br(),
                        side_by_side(
                          selectInput(ns("sel_labelanglex"), 
                                      "Rotation X",
@@ -136,8 +144,10 @@ customplotcontrolsUI <- function(id){
                          checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
                          tags$div(style = "width: 30px;"),
                          checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px")
-                       ),
+                       ), 
                        tags$br()
+                      )
+                     )
                        
                 ),
                 
@@ -171,45 +181,52 @@ customplotcontrolsUI <- function(id){
                          
                 ),
                 tabPanel("Colors",
-                      
-                      side_by_side(
-                       #checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
-                       selectInput(ns("select_palette"), 
-                                   "Color palette",
-                                   choices = color_palettes, 
-                                   selected = "rich.colors", width = "300px")
-                      ),
-
-                      tags$br(),
-                      side_by_side(
-                        actionButton(ns("btn_load_palette"), 
-                                   label_tooltip("Load", "Load colors from selected palette"),
-                                   class = "btn btn-primary",
-                                   icon = icon("chevron-down", lib = "glyphicon")),
-                        tags$br(),
-                        numericInput(ns("num_start_palette"), 
-                                     label_tooltip("Start at", "Load colors starting from this color"),
-                                     value = 1, min=1, max=12, step=1, width="100px")
-                      ),
-                      tags$hr(),
-                      
-                      lapply(1:12, function(i){  
-                        
-                        div(style="width: 150px; display: inline-block;", 
-                          colourInput(ns(paste0("sel_color",i)), as.character(i), 
-                                      value = gplots::rich.colors(12)[i])
-                        )
-                        
-                      }),
-                      tags$br(),
-                      actionButton(ns("btn_randomize_palette"), 
-                                   label_tooltip("Shuffle","Randomly shuffle colors"),
-                                   icon = icon("random")),
-                      tags$hr(),
-                      side_by_side(
-                        textInput(ns("txt_palette_name"), "Save as", width = "200px"),
-                        actionButton(ns("btn_save_palette"), "Save", icon = icon("save"))
+                         
+                    fluidRow(
+                      column(4,
+                             
+                             side_by_side(
+                               #checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
+                               selectInput(ns("select_palette"), 
+                                           "Color palette",
+                                           choices = color_palettes, 
+                                           selected = "rich.colors", width = "300px")
+                             ),
+                             
+                             tags$br(),
+                             side_by_side(
+                               actionButton(ns("btn_load_palette"), 
+                                            label_tooltip("Load", "Load colors from selected palette"),
+                                            class = "btn btn-primary",
+                                            icon = icon("chevron-down", lib = "glyphicon")),
+                               tags$br(),
+                               numericInput(ns("num_start_palette"), 
+                                            label_tooltip("Start at", "Load colors starting from this color"),
+                                            value = 1, min=1, max=12, step=1, width="100px")
+                             ),
+                             tags$hr(),
+                             
+                             lapply(1:12, function(i){  
+                               
+                               div(style="width: 150px; display: inline-block;", 
+                                   colourInput(ns(paste0("sel_color",i)), as.character(i), 
+                                               value = gplots::rich.colors(12)[i])
+                               )
+                               
+                             }),
+                             tags$br(),
+                             actionButton(ns("btn_randomize_palette"), 
+                                          label_tooltip("Shuffle","Randomly shuffle colors"),
+                                          icon = icon("random")),
+                             tags$hr(),
+                             side_by_side(
+                               textInput(ns("txt_palette_name"), "Save as", width = "200px"),
+                               actionButton(ns("btn_save_palette"), "Save", icon = icon("save"))
+                             )
+                             
                       )
+                    )
+                      
                       
                       
                     
@@ -227,26 +244,26 @@ customplotcontrolsUI <- function(id){
                                                  "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
                                   
                 ),
-                tabPanel("Dashboard",
+                tabPanel("Save/Load",
                        
-                       textInput(ns("txt_dashboard_name"), "Naam", 
+                       textInput(ns("txt_dashboard_name"), "Save dashboard", 
                                  value = glue("dashboard_{sample(1:10^4,1)}")),
                        actionButton(ns("btn_save_dashboard"), 
-                                    "Save Dashboard", icon=icon("save"),
+                                    "Save Dashboard", icon=icon("save"), class="btn btn-info",
                                     onclick = "customplotorder();"),
                        tags$hr(),
-                       selectInput(ns("select_dashboard"), "Dashboard database",
+                       selectInput(ns("select_dashboard"), "Load dashboard",
                                    choices = list_dashboards()),
-                       actionButton(ns("btn_load_dashboard"), "Load"),
-                       actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard")
+                       actionButton(ns("btn_load_dashboard"), "Load", class="btn btn-info"),
+                       actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard", class="btn btn-danger")
                 ),
                 tabPanel("Debug",
                          
                          verbatimTextOutput(ns("txt_debug"))
                          )
               ),
-            
-              tags$hr(),
+              tags$br(),
+              
               actionButton(ns("btn_addplot"), 
                            label_tooltip("Make plot","Add plot to dashboard"), 
                            class = "btn btn-primary", 
@@ -257,18 +274,16 @@ customplotcontrolsUI <- function(id){
                              class = "btn btn-primary", 
                              icon = icon("refresh", lib = "glyphicon"))
               ),
-              textOutput(ns("txt_info"))
+              tags$hr()
     
             
       ),
-      column(8, 
-             fluidRow(
-              div(id="placeholder")
-            )  
-      )
-    
+      
+      fluidRow(
+        div(id="placeholder")
+      )  
+      
   )
-  
    
 }
 
