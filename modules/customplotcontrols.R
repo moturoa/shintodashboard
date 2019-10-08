@@ -28,14 +28,16 @@ customplotcontrolsUI <- function(id){
                        
                        shinyjs::hidden(
                          
-                         selectInput(ns("scatter_shape"), "Markers", 
-                                     choices = c("circles","squares"))
+                         awesomeRadio(ns("scatter_shape"), "Marker shape",
+                                      choices = c("circles","squares"),
+                                      inline=TRUE)
                          
                        ),
 
                        shinyjs::hidden(
-                         radioButtons(ns("pietype"), "Pie chart type",
-                                      choices = c("Pie","Waffle"), selected = "Waffle")
+                         awesomeRadio(ns("pietype"), "Pie chart type",
+                                      choices = c("Pie","Waffle"),
+                                      inline=TRUE)
                        ),
                        shinyjs::hidden(
                          checkboxInput(ns("pienarm"), "Remove missing values (NA)",value = FALSE)
@@ -317,8 +319,6 @@ customplotcontrols <- function(input, output, session){
   
   read_plot_settings <- function(){
     
-
-    
     list(
       dataset = input$select_dataset,
       plottype = as.character(input$plot_type),
@@ -411,12 +411,14 @@ customplotcontrols <- function(input, output, session){
       shinyjs::hide("scatter_shape")
       shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
+      shinyjs::show("chk_usegroup")
     }
     if(input$plot_type == "Scatter"){
       shinyjs::hide("plot_stat")
       shinyjs::show("scatter_shape")
       shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
+      shinyjs::show("chk_usegroup")
       
     }
     if(input$plot_type == "Pie chart"){
@@ -424,6 +426,7 @@ customplotcontrols <- function(input, output, session){
       shinyjs::hide("scatter_shape")
       shinyjs::show("pietype")
       shinyjs::show("pienarm")
+      shinyjs::hide("chk_usegroup")
     }
     
   })
@@ -551,7 +554,7 @@ customplotcontrols <- function(input, output, session){
                               width = "200px"
             )
           } else if(interactive[[ellab]] == "sliderInput"){
-            el <- sliderInput(ns(id_interactive[i]),
+            el <- shiny::sliderInput(ns(id_interactive[i]),
                               label = interactive[[label]],
                               min = min(column_data, na.rm=TRUE),
                               max = max(column_data, na.rm=TRUE),
@@ -559,7 +562,7 @@ customplotcontrols <- function(input, output, session){
                               width = "200px"
                               )
           } else if(interactive[[ellab]] == "dateRangeInput") {
-            el <- dateRangeInput(ns(id_interactive[i]),
+            el <- shiny::dateRangeInput(ns(id_interactive[i]),
                               label = interactive[[label]],
                               start = min(column_data, na.rm=TRUE),
                               end = max(column_data, na.rm=TRUE),
