@@ -164,13 +164,18 @@ customplotcontrolsUI <- function(id){
                 ),
                 tabPanel("Annotation",
                       
-                       checkboxInput(ns("check_annotate_bars"), "Label totals in bars", value = FALSE),
-                         
-                         
-                       tags$hr(),
+                       shinyjs::hidden(
+                         tags$div(id = ns("barannotation_controls"),
+                           tags$h4("Bar annotation"),
+                           checkboxInput(ns("check_annotate_bars"), "Label totals in bars", value = FALSE),
+                           tags$hr()
+                         )
+                       ),
+                       
+                       tags$h4("Straight lines"),
                        selectInput(ns("select_annotation"),
                                    "Type",
-                                   choices = c("", "Horizontal line","Vertical line")),
+                                   choices = c("None", "Horizontal line","Vertical line")),
                        shinyjs::hidden(
                          tags$div(id = ns("abline_controls"),
                            numericInput(ns("num_line_coordinate"), "Crosses axis at:", value = 0),
@@ -227,9 +232,6 @@ customplotcontrolsUI <- function(id){
                       )
                     )
                       
-                      
-                      
-                    
                 ),
                 
                 tabPanel("Theme",
@@ -323,6 +325,7 @@ customplotcontrols <- function(input, output, session){
       )
       
     } else {
+      
       list(
         nelements = as.numeric(input$ia_select_nelements),
         element1 = input$ia_select_input1,
@@ -436,7 +439,6 @@ customplotcontrols <- function(input, output, session){
     updateSelectInput(session, "ia_select_variable1", choices = cols, selected = input$ia_select_variable1)
     updateSelectInput(session, "ia_select_variable2", choices = cols, selected = input$ia_select_variable2)
     
-    
   })
   
   observeEvent(input$plot_type, {
@@ -447,21 +449,25 @@ customplotcontrols <- function(input, output, session){
       shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
       shinyjs::show("chk_usegroup")
+      shinyjs::show("barannotation_controls")
     }
+    
     if(input$plot_type == "Scatter"){
       shinyjs::hide("plot_stat")
       shinyjs::show("scatter_shape")
       shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
       shinyjs::show("chk_usegroup")
-      
+      shinyjs::hide("barannotation_controls")
     }
+    
     if(input$plot_type == "Pie chart"){
       shinyjs::hide("plot_stat")
       shinyjs::hide("scatter_shape")
       shinyjs::show("pietype")
       shinyjs::show("pienarm")
       shinyjs::hide("chk_usegroup")
+      shinyjs::hide("barannotation_controls")
     }
     
   })
@@ -500,12 +506,13 @@ customplotcontrols <- function(input, output, session){
     item <- input$select_annotation
     req(item)
     
-    shinyjs::show("abline_controls")
-    
-      
+    if(item != "None"){
+      shinyjs::show("abline_controls")
+    } else {
+      shinyjs::hide("abline_controls")
+    }
   })
 
-  
   observeEvent(input$btn_save_dashboard, {
     
     save_dashboard(plot_settings[input$customplotids], input$txt_dashboard_name)
@@ -575,7 +582,7 @@ customplotcontrols <- function(input, output, session){
             el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
                               label = interactive[[label]],
                               choices = unique(column_data),
-                              selected = if(is.null(value)) unique(column_data) else value,
+                              selected = if(is_empty(value)) unique(column_data) else value,
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `selected-text-format` = "count > 3"),
@@ -586,7 +593,7 @@ customplotcontrols <- function(input, output, session){
                               label = interactive[[label]],
                               min = min(column_data, na.rm=TRUE),
                               max = max(column_data, na.rm=TRUE),
-                              value = if(is.null(value))c(min(column_data, na.rm=TRUE), max(column_data, na.rm=TRUE)) else value,
+                              value = if(is_empty(value))c(min(column_data, na.rm=TRUE), max(column_data, na.rm=TRUE)) else value,
                               width = "200px"
             )
           } else if(interactive[[ellab]] == "dateRangeInput") {
@@ -594,8 +601,8 @@ customplotcontrols <- function(input, output, session){
                               label = interactive[[label]],
                               min = min(column_data, na.rm=TRUE),
                               max = max(column_data, na.rm=TRUE),
-                              start = if(is.null(value))min(column_data, na.rm=TRUE) else value[1],
-                              end = if(is.null(value))max(column_data, na.rm=TRUE) else value[2],
+                              start = if(is_empty(value))min(column_data, na.rm=TRUE) else value[1],
+                              end = if(is_empty(value))max(column_data, na.rm=TRUE) else value[2],
                               width = "200px"
             )
           }
@@ -796,7 +803,7 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_addplot, {
  
-      add_widget()  
+      add_widget()
       shinyjs::hide("btn_updateplot")
     
   })
