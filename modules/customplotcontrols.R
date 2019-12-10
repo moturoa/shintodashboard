@@ -184,9 +184,9 @@ customplotcontrols <- function(input, output, session){
     cols <- current_available_columns()
     
     updateSelectInput(session, "ia_select_variable1", 
-                      choices = cols, selected = input$ia_select_variable1)
+                      choices = cols) #, selected = input$ia_select_variable1)
     updateSelectInput(session, "ia_select_variable2", 
-                      choices = cols, selected = input$ia_select_variable2)
+                      choices = cols) #, selected = input$ia_select_variable2)
     
     print("rendering")
     output$columns_content <- renderUI({
@@ -325,10 +325,10 @@ customplotcontrols <- function(input, output, session){
                    inline = TRUE),
       
       shinyjs::hidden(
-        interactive_panel(1, ns)
+        interactive_panel(1, ns, columns = current_available_columns())
       ),
       shinyjs::hidden(
-        interactive_panel(2, ns)
+        interactive_panel(2, ns, columns = current_available_columns())
       )
     )
     
@@ -756,14 +756,13 @@ customplotcontrols <- function(input, output, session){
       
       make_interactive_element <- function(i){
         
+        if(i > interactive$nelements)return(NULL)
+        
         varlab <- paste0("variable",i)
         ellab <- paste0("element",i)
         label <- paste0("label",i)
         value <- interactive_vals[[i]]
         
-        if(is_empty(interactive[[varlab]])){
-          return(NULL)
-        } else {
           column_data <- data[,interactive[[varlab]]][[1]]
           
           if(interactive[[ellab]] == "selectInput"){
@@ -796,8 +795,8 @@ customplotcontrols <- function(input, output, session){
           }
           
           
-          return(el)
-        }
+        return(el)
+        
       }
       
       inner_content <- c(inner_content, list(

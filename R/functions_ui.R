@@ -14,7 +14,7 @@ interactive_panel <- function(i, ns, columns){
                       selectInput(ns(glue("ia_select_variable{i}")), 
                                   "Heeft effect op variabele",
                                   width = 300,
-                                  choices = ""),
+                                  choices = columns),
                       textInput(ns(glue("ia_element_label{i}")), "Label")
              )
            )
