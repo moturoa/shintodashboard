@@ -6,284 +6,85 @@ customplotcontrolsUI <- function(id){
   
   fluidPage(
     fluidRow(
-      #column(4, id = "panel_controls",
-           tags$h2("Widget configurator"),
-           tags$hr(),
-            tabsetPanel( id = "controls_tab_box", #type = "pills",
-                tabPanel("Start",
-                
-                       selectInput(ns("select_dataset"), "Dataset", 
-                                   choices = available_datasets),
-                       
-                       
-                       selectInput(ns("plot_type"), "Plot type", 
-                                   choices = c("Barplot", "Scatter", "Pie chart"),
-                                   selected = "Barplot"),
-                       
-                       shinyjs::hidden(
-                         
-                         awesomeRadio(ns("bar_position"), "Bar groups position",
-                                      choices = c("Stacked","Grouped"),
-                                      selected = "Stacked", inline=TRUE)
-                         
-                       ),
-                       
-                       shinyjs::hidden(
-                         
-                         awesomeRadio(ns("scatter_shape"), "Marker shape",
-                                      choices = c("circles","squares"),
-                                      inline=TRUE)
-                         
-                       ),
 
-                       shinyjs::hidden(
-                         awesomeRadio(ns("pietype"), "Pie chart type",
-                                      choices = c("Pie","Waffle"),
-                                      inline=TRUE)
-                       ),
-                       shinyjs::hidden(
-                         checkboxInput(ns("pienarm"), "Remove missing values (NA)",value = FALSE)
-                         
-                       )
+            tabBox( id = "controls_tab_box", width = 12, 
+                tabPanel("1. Start",
+                
+                       uiOutput(ns("start_content"))
                        
                 ),       
-                tabPanel("Columns",
+                tabPanel("2. Kolommen",
                      
-                       tags$h4("X-axis"),
-                       side_by_side(
-                         selectInput(ns("plot_xvar"), 
-                                     label = "",
-                                     choices = "", selected = ""),
-                         checkboxInput(ns("chk_factor_x"), "Force factor", value = FALSE, width="50px")
-                       ),
-                       tags$br(),
-                       tags$h4("Y-axis"),
-                       tags$div(id = ns("yvar_box"),
-                                side_by_side(
-                                  selectInput(ns("plot_yvar"), 
-                                              label = label_tooltip("Y Variable", "Select Y-axis variable"),
-                                              choices = "", selected = ""),
-                                  checkboxInput(ns("chk_factor_y"), 
-                                                "Force factor",
-                                                value = FALSE, width="50px")
-                                )
-                       ),
-                       shinyjs::hidden(
-                         selectInput(ns("plot_stat"), 
-                                     label_tooltip("Function", "The function used to aggregate the Y-data into bars"),
-                                     choices = c("Sum of Y" = "sum", "Mean of Y" = "mean","Count rows of X" = "count"),
-                                     selected = "sum")
-                       ),
+                      uiOutput(ns("columns_content"))
                        
+                ),
+                # tabPanel("3. Filter",
+                #          
+                #       uiOutput(ns("filter_controls"))
+                #          
+                # ),
+                tabPanel("3. Interactief",
+                         
+                      uiOutput(ns("interactive_controls"))
+                       
+                ),
+                tabPanel("4. Labels",
+                         
+                     uiOutput(ns("labels_controls"))
+                     
+                ),
+                
 
-                       tags$br(),
-                       checkboxInput(ns("chk_usegroup"), "Use grouping"),
-                       shinyjs::hidden(
-                         selectInput(ns("plot_groupvar"), 
-                                     label = label_tooltip("Grouping Variable", "Select variable for colors or bar segments"),
-                                     choices = "", selected = "")
-                       )
-                       
-                       
-                ),
-                tabPanel("Filter",
-                         
-                         uiOutput(ns("filter_controls"))
+                tabPanel("5. Annotatie",
+                      
+                      uiOutput(ns("annotation_controls"))
                          
                 ),
-                tabPanel("Interactive",
-                           
-                       tagList(
-                         awesomeRadio(ns("ia_select_nelements"),
-                                      "Number of interactive elements",
-                                      choices = c("0","1","2"),
-                                      selected = "0",
-                                      inline=TRUE),
+                tabPanel("6. Kleuren",
                          
+                    uiOutput(ns("colors_controls"))
+                      
+                ),
+                
+                # tabPanel("Thema",
+                # 
+                #     uiOutput(ns("theme_controls"))
+                #          
+                # ),
+
+                
+                tabPanel(tagList(icon("play"), "Voltooien"),
+                         
+                         tags$p("Maak de plot aan volgens de huidige instellingen.",
+                                "De plot wordt op het dashboard geplaatst."),
+                         tags$br(),
+                         actionButton(ns("btn_addplot"), 
+                                      label_tooltip("Plot maken","Voeg huidige plot toe aan dashboard."), 
+                                      class = "btn btn-primary", 
+                                      icon = icon("plus", lib = "glyphicon")),
                          shinyjs::hidden(
-                           interactive_panel(1, ns)
-                         ),
-                         shinyjs::hidden(
-                           interactive_panel(2, ns)
+                           actionButton(ns("btn_updateplot"), 
+                                        label_tooltip("Plot updaten", "Geselecteerde plot updaten."), 
+                                        class = "btn btn-primary", 
+                                        icon = icon("refresh", lib = "glyphicon"))
                          )
-                       )
-                      
-                ),
-                tabPanel("Labels",
-                         
-                         
-                     fluidRow(    
-                      column(3,    
-                       textInput(ns("plot_title"), "Title"),
-                       textInput(ns("plot_subtitle"), "Sub-title"),
-                       textInput(ns("plot_xlab"), "X-axis label"),
-                       textInput(ns("plot_ylab"), "Y-axis label"),
-                       textInput(ns("plot_glab"), label_tooltip("Group label", "Title for the legend"))
-                       
-                      ),
-                      column(3, 
-                       side_by_side(
-                         numericInput(ns("num_labelsize"), 
-                                      label_tooltip("Font size","Adjusts the base font size, affects all text"),
-                                      min =8, max=20, value=12, width = "148px"),
-                         numericInput(ns("num_labelmargin"),
-                                      label_tooltip("Label margin","Space between axis and axis labels"),
-                                      min = 0, max=10, value=2, width = "148px")
-                       ),
-                       side_by_side(
-                         selectInput(ns("sel_labelanglex"), 
-                                     "Rotation X",
-                                     choices = c(0,90), width = "148px"),
-                         selectInput(ns("sel_labelangley"), 
-                                     label_tooltip("Rotation Y",
-                                                   "Axis label rotation. Select 90 for labels perpendicular to axis"),
-                                     choices = c(0,90), width = "148px")
-                       ),
-                       br(),
-                       side_by_side(vertical_align = TRUE,
-                         checkboxInput(ns("chk_removelabelsx"), "Remove X-axis labels", width="60px"),
-                         tags$div(style = "width: 30px;"),
-                         checkboxInput(ns("chk_nolegend"), "Remove legend", width="60px")
-                       ), 
-                       tags$br()
-                      )
-                     )
-                       
                 ),
                 
-                tabPanel("Axes",
+                tabPanel(tagList(icon("table"), "Dashboard"),
+                         
+                         uiOutput(ns("saveload_controls"))
+                         
+                )
                 
-                         
-                       checkboxInput(ns("chk_includezerox"), 
-                                     label_tooltip("X - include 0", "Start X-axis at zero"),
-                                                   value = FALSE),
-                       checkboxInput(ns("chk_includezeroy"), 
-                                     label_tooltip("Y - include 0", "Start Y-axis at zero"),
-                                                    value = FALSE)
-                                  
-                ),
-                tabPanel("Annotation",
-                      
-                       shinyjs::hidden(
-                         tags$div(id = ns("barannotation_controls"),
-                           tags$h4("Bar annotation"),
-                           checkboxInput(ns("check_annotate_bars"), "Label totals in bars", value = FALSE),
-                           tags$hr()
-                         )
-                       ),
-                       
-                       tags$h4("Straight lines"),
-                       selectInput(ns("select_annotation"),
-                                   "Type",
-                                   choices = c("None", "Horizontal line","Vertical line")),
-                       shinyjs::hidden(
-                         tags$div(id = ns("abline_controls"),
-                           numericInput(ns("num_line_coordinate"), "Crosses axis at:", value = 0),
-                           colourInput(ns("colour_annotation"), "Colour", value = "black")
-                         )
-                       )
-                         
-                         
-                ),
-                tabPanel("Colors",
-                         
-                    fluidRow(
-                      column(4,
-                             
-                             side_by_side(
-                               #checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
-                               selectInput(ns("select_palette"), 
-                                           "Color palette",
-                                           choices = color_palettes, 
-                                           selected = "rich.colors", width = "300px")
-                             ),
-                             
-                             tags$br(),
-                             side_by_side(
-                               actionButton(ns("btn_load_palette"), 
-                                            label_tooltip("Load", "Load colors from selected palette"),
-                                            class = "btn btn-primary",
-                                            icon = icon("chevron-down", lib = "glyphicon")),
-                               tags$br(),
-                               numericInput(ns("num_start_palette"), 
-                                            label_tooltip("Start at", "Load colors starting from this color"),
-                                            value = 1, min=1, max=12, step=1, width="100px")
-                             ),
-                             tags$hr(),
-                             
-                             lapply(1:12, function(i){  
-                               
-                               div(style="width: 150px; display: inline-block;", 
-                                   colourInput(ns(paste0("sel_color",i)), as.character(i), 
-                                               value = gplots::rich.colors(12)[i])
-                               )
-                               
-                             }),
-                             tags$br(),
-                             actionButton(ns("btn_randomize_palette"), 
-                                          label_tooltip("Shuffle","Randomly shuffle colors"),
-                                          icon = icon("random")),
-                             tags$hr(),
-                             side_by_side(
-                               textInput(ns("txt_palette_name"), "Save as", width = "200px"),
-                               actionButton(ns("btn_save_palette"), "Save", icon = icon("save"))
-                             )
-                             
-                      )
-                    )
-                      
-                ),
-                
-                tabPanel("Theme",
-                
-                         selectInput(ns("select_theme"),
-                                     label_tooltip("Select theme","Select ggplot2 theme, affects styling"),
-                                     choices = c("theme_minimal","theme_bw","theme_classic",
-                                                 "theme_linedraw","theme_light",
-                                                 "theme_base","theme_calc","theme_clean","theme_economist",
-                                                 "theme_economist_white","theme_excel","theme_few",
-                                                 "theme_fivethirtyeight","theme_foundation",
-                                                 "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
-                                  
-                ),
-                tabPanel("Save/Load",
-                       
-                       textInput(ns("txt_dashboard_name"), "Save dashboard", 
-                                 value = glue("dashboard_{sample(1:10^4,1)}")),
-                       actionButton(ns("btn_save_dashboard"), 
-                                    "Save Dashboard", icon=icon("save"), class="btn btn-info",
-                                    onclick = "customplotorder();"),
-                       tags$hr(),
-                       selectInput(ns("select_dashboard"), "Load dashboard",
-                                   choices = list_dashboards()),
-                       actionButton(ns("btn_load_dashboard"), "Load", class="btn btn-info"),
-                       actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard", class="btn btn-danger")
-                ),
-                tabPanel("Debug",
-                         
-                         verbatimTextOutput(ns("txt_debug"))
-                         )
-              ),
-              tags$br(),
+                # tabPanel("Debug",
+                #          
+                #          verbatimTextOutput(ns("txt_debug"))
+                # )
+              )
               
-              actionButton(ns("btn_addplot"), 
-                           label_tooltip("Make plot","Add plot to dashboard"), 
-                           class = "btn btn-primary", 
-                           icon = icon("plus", lib = "glyphicon")),
-              shinyjs::hidden(
-                actionButton(ns("btn_updateplot"), 
-                             label_tooltip("Update plot", "Update the last selected plot"), 
-                             class = "btn btn-primary", 
-                             icon = icon("refresh", lib = "glyphicon"))
-              ),
-              tags$hr()
     
             
-      ),
-      
-      fluidRow(
-        div(id="placeholder")
-      )  
+      )
       
   )
    
@@ -301,18 +102,414 @@ customplotcontrols <- function(input, output, session){
   )
   
   current_dataset <- reactive({
+    req(input$select_dataset)
     get(input$select_dataset)
   })
   
   current_available_columns <- reactive({
+    print("updating columns")
     names(current_dataset())
+    
   })
   
   ns <- session$ns
   
-  output$txt_debug <- renderPrint({
-    reactiveValuesToList(input)
+  
+  observe({
+    
+    out <- load_dashboard("wbmdemo5")
+    
+    for(i in seq_along(out)){
+      add_widget(plotarguments = out[[i]])
+    }
+    
   })
+  
+  # output$txt_debug <- renderPrint({
+  #   reactiveValuesToList(input)
+  # })
+  
+  output$start_content <- renderUI({
+    
+    tagList(
+      selectInput(ns("select_dataset"), 
+                  label_tooltip("Dataset", 
+                                "Selecteer een dataset."),
+                  width = 300,
+                  choices = available_datasets),
+      
+      
+      selectInput(ns("plot_type"), 
+                  label_tooltip("Plot type", "Selecteer een van de beschikbare plot types."),
+                  width = 300,
+                  choices = c("Barplot", "Scatter", "Pie chart"),
+                  selected = "Barplot"),
+      
+      shinyjs::hidden(
+        
+        awesomeRadio(ns("bar_position"), 
+                     label_tooltip("Layout van deel bars",
+                                   "Voor een barplot, de positie van de delen: boven op elkaar (stacked) of naast elkaar"),
+                     choices = c("Stacked","Grouped"),
+                     selected = "Stacked", inline=TRUE)
+        
+      ),
+      
+      shinyjs::hidden(
+        
+        awesomeRadio(ns("scatter_shape"), 
+                     label_tooltip("Plot symbool",
+                                   "Soort markers voor de scatter plot"),
+                     choices = c("circles","squares"),
+                     inline=TRUE)
+        
+      ),
+      
+      shinyjs::hidden(
+        awesomeRadio(ns("pietype"), 
+                     label_tooltip("Pie chart type", 
+                                   "Soort pie chart. Alleen Pie mogelijk op het moment."),
+                     choices = c("Pie","Waffle"),
+                     inline=TRUE)
+      ),
+      shinyjs::hidden(
+        checkboxInput(ns("pienarm"), "Missende waarden weghalen.", value = FALSE)
+        
+      )
+    )
+  })
+  
+  observeEvent(current_available_columns(), {
+    
+    cols <- current_available_columns()
+    
+    updateSelectInput(session, "ia_select_variable1", 
+                      choices = cols, selected = input$ia_select_variable1)
+    updateSelectInput(session, "ia_select_variable2", 
+                      choices = cols, selected = input$ia_select_variable2)
+    
+    print("rendering")
+    output$columns_content <- renderUI({
+      
+      tagList(
+        
+        side_by_side(
+          selectInput(ns("plot_xvar"), 
+                      label = label_tooltip("X Variabele", 
+                                            "Selecteer variabele die langs de X-as wordt geplot"),
+                      choices = cols, 
+                      width = 300,
+                      selected = if(!is_empty(input$plot_xvar))input$plot_xvar else cols[1]),
+          checkboxInput(ns("chk_factor_x"), 
+                        "Maak factor", 
+                        value = FALSE, width="50px")
+        ),
+        tags$br(),
+        
+        tags$div(id = ns("yvar_box"),
+                 side_by_side(
+                   selectInput(ns("plot_yvar"), 
+                               label = label_tooltip("Y Variabele", 
+                                                     "Selecteer variabele die langs de Y-as wordt geplot"),
+                               choices = cols, 
+                               width = 300,
+                               selected = if(!is_empty(input$plot_yvar))input$plot_yvar else cols[2]),
+                   checkboxInput(ns("chk_factor_y"), 
+                                 "Maak factor",
+                                 value = FALSE, width="50px")
+                 )
+        ),
+        shinyjs::hidden(
+          selectInput(ns("plot_stat"), 
+                      label_tooltip("Functie", "De functie om de data in groepen samen te vatten."),
+                      width = 300,
+                      choices = c("Sum van Y" = "sum", 
+                                  "Gemiddelde van Y" = "mean",
+                                  "Tel aantal rijen in X" = "count"),
+                      selected = "sum")
+        ),
+        
+        tags$br(),
+        checkboxInput(ns("chk_usegroup"), 
+                      label_tooltip("Gebruik groep variabele", 
+                                    "Voeg een 3e kolom toe, die de data in groepen verdeeld"),
+                      value = FALSE),
+        shinyjs::hidden(
+          selectInput(ns("plot_groupvar"), 
+                      label = label_tooltip("Groep variabele", 
+                                            "Selecteer de kolom die de kleuren in de bar delen aangeeft."),
+                      width = 300,
+                      choices = cols, 
+                      selected = cols[3]) #if(!is_empty(input$plot_groupvar))input$plot_groupvar else cols[3])
+        )
+      )
+    })
+    
+    
+  })
+  # 
+  # output$filter_controls <- renderUI({
+  #   
+  #   req(current_dataset())
+  #   
+  #   if(is_empty(input$plot_xvar)){
+  #     tags$p("Selecteer eerst de X en Y variabelen.")
+  #   } else {
+  #     req(input$plot_yvar)
+  #   
+  #     make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
+  #       data <- data[!is.na(data)]
+  #       
+  #       if(force_factor | is.factor(data) | is.character(data)){
+  #         
+  #         el <- tagList(
+  #           h4(label),
+  #           selectInput(session$ns(glue("{idbase}3")), "", 
+  #                       width = 300,
+  #                       choices = sort(unique(data)), multiple=TRUE)
+  #         )
+  #         
+  #       } else {
+  #         
+  #         if(is.numeric(data)){
+  #           
+  #           el <- tagList(
+  #             h4(label),
+  #             side_by_side(
+  #               numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width = 100),
+  #               numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width = 100)
+  #             ),
+  #             br()
+  #           ) 
+  #           
+  #         }
+  #         
+  #         if(inherits(data, "Date")){
+  #           
+  #           el <- tagList(
+  #             h4(label),
+  #             dateRangeInput(session$ns(glue("{idbase}4")), "", 
+  #                            start = min(data), 
+  #                            end = max(data),
+  #                            width = 300,
+  #                            format = "dd/mm/yy", 
+  #                            language = "nl")
+  #           )
+  #           
+  #         }
+  #         
+  #       }
+  #       return(el)
+  #     }
+  #     
+  #     tagList(
+  #       make_controls(current_dataset()[[input$plot_xvar]], "X variabele", 
+  #                     idbase="filterx", force_factor = input$chk_factor_x),
+  #       make_controls(current_dataset()[[input$plot_yvar]], "Y variabele", 
+  #                     idbase="filtery", force_factor = input$chk_factor_y),
+  #       make_controls(current_dataset()[[input$plot_groupvar]], "Groep variabele", 
+  #                     idbase="filterg", force_factor = TRUE)
+  #     )
+  #   }
+  #   
+  # })
+  
+  output$interactive_controls <- renderUI({
+    
+    tagList(
+      awesomeRadio(ns("ia_select_nelements"),
+                   label_tooltip("Aantal interactieve elementen",
+                                 "Voeg hier (optioneel) interactieve elementen toe aan de plot"),
+                   choices = c("0","1","2"),
+                   selected = "0",
+                   inline = TRUE),
+      
+      shinyjs::hidden(
+        interactive_panel(1, ns)
+      ),
+      shinyjs::hidden(
+        interactive_panel(2, ns)
+      )
+    )
+    
+  })
+  
+  output$labels_controls <- renderUI({
+    
+    fluidRow(    
+      column(4,    
+             textInput(ns("plot_title"), "Titel"),
+             textInput(ns("plot_subtitle"), "Sub-titel"),
+             textInput(ns("plot_xlab"), "X-as label"),
+             textInput(ns("plot_ylab"), "Y-as label"),
+             textInput(ns("plot_glab"), label_tooltip("Groep label", "Titel voor de legenda"))
+             
+      ),
+      column(4, 
+             side_by_side(
+               numericInput(ns("num_labelsize"), 
+                            "Tekst grootte",
+                            min =8, max=20, value=12, width = "148px"),
+               
+               numericInput(ns("num_labelmargin"),
+                            label_tooltip("Label marge","Ruimte tussen de as en de labels."),
+                            min = 0, max=10, value=2, width = "148px")
+             ),
+             side_by_side(
+               selectInput(ns("sel_labelanglex"), 
+                           "X-as label rotatie",
+                           choices = c(0,90), width = "148px"),
+               selectInput(ns("sel_labelangley"), 
+                           label_tooltip("Y-as label rotatie",
+                                         "Rotatie voor de labels naast de as."),
+                           choices = c(0,90), width = "148px")
+             ),
+             br(),
+             side_by_side(vertical_align = TRUE,
+                          checkboxInput(ns("chk_removelabelsx"), "Geen X-as labels", width="60px"),
+                          tags$div(style = "width: 30px;"),
+                          checkboxInput(ns("chk_nolegend"), "Geen legenda", width="60px")
+             ), 
+             tags$br()
+      ),
+      column(4, 
+             checkboxInput(ns("chk_includezerox"), 
+                           label_tooltip("X - begin bij 0", "Start X-as bij nul"),
+                           value = FALSE),
+             checkboxInput(ns("chk_includezeroy"), 
+                           label_tooltip("Y - begin bij 0", "Start Y-as bij nul"),
+                           value = FALSE)
+      )
+    )
+    
+    
+  })
+  
+
+  
+  output$annotation_controls <- renderUI({
+    
+    tagList(
+      shinyjs::hidden(
+        tags$div(id = ns("barannotation_controls"),
+                 tags$h4("Annotatie voor bars"),
+                 checkboxInput(ns("check_annotate_bars"), 
+                               label_tooltip("Label totalen boven de bars", 
+                                             "Voegt een label toe per bar met de totale waarde"),
+                               value = FALSE),
+                 tags$hr()
+        )
+      ),
+      
+      tags$h4("Rechte lijnen"),
+      selectInput(ns("select_annotation"),
+                  "Type",
+                  width = 300,
+                  choices = c("Geen" = "None", 
+                              "Horizontale lijn" = "Horizontal line",
+                              "Verticale lijn" = "Vertical line")),
+      shinyjs::hidden(
+        tags$div(id = ns("abline_controls"),
+                 numericInput(ns("num_line_coordinate"), "X-as waarde:", 
+                              value = 0, width = 300),
+                 tags$div(style = "width: 200px;",
+                  colourInput(ns("colour_annotation"), "Kleur", value = "red")
+                 )
+        )
+      )
+    )
+    
+  })
+  
+  output$colors_controls <- renderUI({
+    
+    fluidRow(
+      column(8,
+             
+             side_by_side(
+               #checkboxInput(ns("chk_colorbrewer"), "", value = TRUE, width = "60px"), 
+               selectInput(ns("select_palette"), 
+                           "Palet",
+                           choices = color_palettes, 
+                           selected = "rich.colors", width = 300)
+             ),
+             
+             tags$br(),
+             side_by_side(
+               actionButton(ns("btn_load_palette"), 
+                            label_tooltip("Laden", 
+                                          "Laad kleuren uit het geselecteerde palet."),
+                            class = "btn btn-primary",
+                            icon = icon("chevron-down", lib = "glyphicon")),
+               tags$br(),
+               numericInput(ns("num_start_palette"), 
+                            label_tooltip("Begin bij", 
+                                          "Laad kleuren vanaf deze kleur."),
+                            value = 1, min=1, max=12, step=1, width = 100)
+             ),
+             tags$hr(),
+             
+             lapply(1:12, function(i){  
+               
+               div(style="width: 110px; display: inline-block;", 
+                   colourInput(ns(paste0("sel_color",i)), as.character(i), 
+                               value = gplots::rich.colors(12)[i])
+               )
+               
+             }),
+             tags$br(),
+             actionButton(ns("btn_randomize_palette"), 
+                          label_tooltip("Shuffle",
+                                        "Zet de kleuren in willekeurige volgorde"),
+                          icon = icon("random")),
+             tags$hr(),
+             side_by_side(
+               textInput(ns("txt_palette_name"), "Opslaan als...", width = 200),
+               actionButton(ns("btn_save_palette"), "", icon = icon("save"))
+             )
+             
+      )
+    )
+  })
+  # 
+  # output$theme_controls <- renderUI({
+  #   
+  #   tagList(
+  #     
+  #     selectInput(ns("select_theme"),
+  #                 label_tooltip("Select theme","Select ggplot2 theme, affects styling"),
+  #                 choices = c("theme_minimal","theme_bw","theme_classic",
+  #                             "theme_linedraw","theme_light",
+  #                             "theme_base","theme_calc","theme_clean","theme_economist",
+  #                             "theme_economist_white","theme_excel","theme_few",
+  #                             "theme_fivethirtyeight","theme_foundation",
+  #                             "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
+  #     
+  #   )
+  #   
+  # })
+  
+  output$saveload_controls <- renderUI({
+    
+    tagList(
+      tags$p("Huidig dashboard opslaan, of een dashboard uit de database laden."),
+      textInput(ns("txt_dashboard_name"), "Dashboard opslaan", 
+                value = glue("dashboard_{sample(1:10^4,1)}")),
+      actionButton(ns("btn_save_dashboard"), 
+                   "Opslaan", icon=icon("save"), class="btn btn-info",
+                   onclick = "customplotorder();"),
+      tags$hr(),
+      selectInput(ns("select_dashboard"), "Dashboard laden",
+                  choices = list_dashboards()),
+      actionButton(ns("btn_load_dashboard"), "", 
+                   class="btn btn-info", 
+                   icon = icon("folder-open"))
+      # actionButton(ns("btn_dashboard_wissen"), "Erase current dashboard", 
+      #              class="btn btn-danger")
+    )
+    
+  })
+  
   
   read_interactive_controls <- function(){
     
@@ -372,7 +569,7 @@ customplotcontrols <- function(input, output, session){
       pienarm = input$pienarm,
       palette = read_palette(),
       shape = input$scatter_shape,
-      theme = input$select_theme,
+      theme = "theme_minimal",
       includezerox = input$chk_includezerox,
       includezeroy = input$chk_includezeroy,
       labelsize = input$num_labelsize,
@@ -424,23 +621,6 @@ customplotcontrols <- function(input, output, session){
     updateTextInput(session, "txt_palette_name", value = "")
   })
   
-  observeEvent(input$select_dataset, {
-
-    cols <- current_available_columns()
-    
-    updateSelectInput(session, "plot_xvar", 
-                      choices = cols, 
-                      selected = if(!is_empty(input$plot_xvar))input$plot_xvar else cols[1])
-    updateSelectInput(session, "plot_yvar", choices = cols, 
-                      selected = if(!is_empty(input$plot_yvar))input$plot_yvar else cols[2])
-    updateSelectInput(session, "plot_groupvar", choices = cols, 
-                      selected = if(!is_empty(input$plot_groupvar))input$plot_groupvar else cols[3])
-    
-    updateSelectInput(session, "ia_select_variable1", choices = cols, selected = input$ia_select_variable1)
-    updateSelectInput(session, "ia_select_variable2", choices = cols, selected = input$ia_select_variable2)
-    
-  })
-  
   observeEvent(input$plot_type, {
     
     if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
@@ -474,6 +654,8 @@ customplotcontrols <- function(input, output, session){
   
   observe({
     
+    req(input$plot_stat)
+    
     if(input$plot_stat == "count"){
       shinyjs::hide("yvar_box")
     } else {
@@ -484,14 +666,20 @@ customplotcontrols <- function(input, output, session){
   
   observe({
     
+    req(input$chk_usegroup)
+    
+    
     if(input$chk_usegroup){
+      print("showing groupvar")
       shinyjs::show("plot_groupvar")
     } else {
+      print("hiding groupvar")
       shinyjs::hide("plot_groupvar")
     }
   })
   
   observe({
+    req(input$plot_type)
     
     if(input$plot_type == "Barplot"){
       shinyjs::show("bar_position")
@@ -695,6 +883,8 @@ customplotcontrols <- function(input, output, session){
     
     update_inputs <- function(a, session){
       
+      print("updating inputs")
+      
       # Panel 1 - Start
       updateSelectInput(session, "select_dataset", selected = a$dataset)
       
@@ -718,6 +908,7 @@ customplotcontrols <- function(input, output, session){
       updateSelectInput(session, "plot_groupvar", choices = current_columns, selected = a$groupvar)
       
       if(a$groupvar == ""){
+        print("setting to FALSE")
         updateCheckboxInput(session, "chk_usegroup",value = FALSE)
       }
       
@@ -809,59 +1000,7 @@ customplotcontrols <- function(input, output, session){
   })
 
 
-  output$filter_controls <- renderUI({
-        
-      make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
-        data <- data[!is.na(data)]
-        
-        if(force_factor | is.factor(data) | is.character(data)){
-          
-          el <- tagList(
-            h4(label),
-            selectInput(session$ns(glue("{idbase}3")), "", choices = sort(unique(data)), multiple=TRUE)
-          )
-          
-        } else {
-          
-          if(is.numeric(data)){
-            
-            
-            el <- tagList(
-              h4(label),
-              side_by_side(
-                numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width="100px"),
-                numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width="100px")
-              ),
-              br()
-            ) 
-            
-          }
-          
-          if(inherits(data, "Date")){
-            
-            el <- tagList(
-              h4(label),
-              dateRangeInput(session$ns(glue("{idbase}4")), "", start = min(data), end = max(data),
-                             format = "dd/mm/yy", language = "nl")
-            )
-            
-          }
-          
-        }
-        return(el)
-      }
-        
-      tagList(
-        make_controls(current_dataset()[[input$plot_xvar]], "X variable", 
-                      idbase="filterx", force_factor = input$chk_factor_x),
-        make_controls(current_dataset()[[input$plot_yvar]], "Y variable", 
-                      idbase="filtery", force_factor = input$chk_factor_y),
-        make_controls(current_dataset()[[input$plot_groupvar]], "Group variable", 
-                      idbase="filterg", force_factor = TRUE)
-      )
-    
-        
-  })
+  
 
   observe({
     
