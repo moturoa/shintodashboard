@@ -5,21 +5,35 @@ columnFilterUI <- function(id, data){
   ns <- NS(id)
   
   tagList(
-    selectInput(ns("select_column"), "Filter deze kolom", choices = names(data)),
-    uiOutput(ns("column_filter_ui"))
+    side_by_side(
+      selectInput(ns("select_column"), "Filter deze kolom", choices = names(data)),
+      uiOutput(ns("column_filter_ui")),
+      vertical_align = TRUE
+    ),
+    tags$br()
   )
-  
   
 }
 
 columnFilter <- function(input, output, session, data){
   
+  out <- reactiveValues(
+    column = NULL,
+    class = NULL,
+    value = NULL
+  )
   
+  columnData <- reactive({
+    req(input$select_column)
+    column <- data[[input$select_column]]
+    if(is.factor(column))column <- as.character(column)
+    
+  return(column)
+  })
   
   observeEvent(input$select_column, {
     
-    column <- data[[input$select_column]]
-    if(is.factor(column))column <- as.character(column)
+    column <- columnData()
     col_class <- class(column)
     
     ui <- switch(col_class, 
@@ -35,9 +49,18 @@ columnFilter <- function(input, output, session, data){
     
     output$column_filter_ui <- renderUI(ui)
     
+    
   })
   
+  observe({
+    
+    out$column <- input$select_column
+    out$value <- input$column_filter
+    out$class <- class(columnData())
+    
+  })
   
+return(out)
 }
 
 

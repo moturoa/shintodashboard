@@ -117,7 +117,9 @@ customplotcontrolsUI <- function(id){
                 
                 tabPanel("3. Filter",
 
+                      tags$br(),
                       actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
+                      tags$br(),
                       tags$div(id = ns("filter_placeholder"))
 
                 ),
@@ -343,7 +345,8 @@ customplotcontrols <- function(input, output, session){
   rv <- reactiveValues(
     all_ids = NULL,
     current_id_container = NULL,
-    current_id_plot = NULL
+    current_id_plot = NULL,
+    filter_settings = NULL
   )
   
   current_dataset <- reactive({
@@ -357,15 +360,15 @@ customplotcontrols <- function(input, output, session){
   
   ns <- session$ns
   
-  observe({
-
-    out <- load_dashboard("wbmdemo5")
-
-    for(i in seq_along(out)){
-      add_widget(plotarguments = out[[i]])
-    }
-
-  })
+  # observe({
+  # 
+  #   out <- load_dashboard("wbmdemo5")
+  # 
+  #   for(i in seq_along(out)){
+  #     add_widget(plotarguments = out[[i]])
+  #   }
+  # 
+  # })
   
   # output$txt_debug <- renderPrint({
   #   reactiveValuesToList(input)
@@ -391,12 +394,14 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_add_filter, {
 
+    new_id <- uuid::UUIDgenerate()
+    
     insertUI(paste0("#", session$ns("filter_placeholder")), 
              "beforeEnd", 
-             columnFilterUI(session$ns("testid"), current_dataset())
+             columnFilterUI(session$ns(new_id), current_dataset())
             )
     
-    callModule(columnFilter, "testid", current_dataset())
+    rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
     
     
   })
@@ -529,25 +534,26 @@ customplotcontrols <- function(input, output, session){
     
     list(
       dataset = input$select_dataset,
+      
       plottype = as.character(input$plot_type),
+      bar_position = input$bar_position,
+      statfun = input$plot_stat,
+      
+      pietype = input$pietype,
+      pienarm = input$pienarm,
+      
       xvar = as.character(input$plot_xvar),
       factor_x = input$chk_factor_x,
       factor_y = input$chk_factor_y,
       yvar = as.character(input$plot_yvar),
       usegroup = input$chk_usegroup,
       groupvar = as.character(input$plot_groupvar),
-      bar_position = input$bar_position,
+      
       title = input$plot_title,
       subtitle = input$plot_subtitle,
       xlab = input$plot_xlab,
       ylab = input$plot_ylab,
       glab = input$plot_glab,
-      statfun = input$plot_stat,
-      pietype = input$pietype,
-      pienarm = input$pienarm,
-      palette = read_palette(),
-      shape = input$scatter_shape,
-      theme = "theme_minimal",
       includezerox = input$chk_includezerox,
       includezeroy = input$chk_includezeroy,
       labelsize = input$num_labelsize,
@@ -556,15 +562,18 @@ customplotcontrols <- function(input, output, session){
       labelangley =  input$sel_labelangley,
       nolabelsx = input$chk_removelabelsx,
       nolegend =  input$chk_nolegend,
+      
+      palette = read_palette(),
+      shape = input$scatter_shape,
+      theme = "theme_minimal",
+      
       annotate_bars = input$check_annotate_bars,
       annotation_type = input$select_annotation,
       line_coordinate = input$num_line_coordinate,
       line_colour = input$colour_annotation,
-      filters = list(input$filterx1, input$filterx2, input$filterx3, input$filterx4,
-                     input$filtery1, input$filtery2, input$filtery3, input$filtery4,
-                     input$filterg1, input$filterg2, input$filterg3, input$filterg4),
-      interactive = read_interactive_controls()
       
+      filters = lapply(rv$filter_settings, reactiveValuesToList),
+      interactive = read_interactive_controls()
       
     )
   }
@@ -886,27 +895,8 @@ customplotcontrols <- function(input, output, session){
       }
       
       # Panel 3 - Filters
-      update_filter <- function(id,i,type){
-        
-        if(length(a$filters[[i]])){
-          if(type == "numeric"){
-            updateNumericInput(session, id, value = a$filters[[i]])
-          } else if(type == "factor"){
-            updateSelectInput(session, id, selected = a$filters[[i]])
-          } else if(type == "date"){
-            updateDateRangeInput(session, id, start = a$filters[[i]][1], end = a$filters[[i]][2])
-          }
-        }
-      }
-      
-      fs <- c("filterx1", "filterx2", "filterx3", "filterx4", 
-              "filtery1", "filtery2", "filtery3", "filtery4", 
-              "filterg1", "filterg2", "filterg3", "filterg4")
-      
-      type <- rep(c("numeric","numeric","factor","date"), times = 3)
-      for(i in seq_along(fs)){
-        update_filter(fs[i], i, type[i])
-      }
+      # ctn
+      # !!!
       
       # Panel 4 - Interactive
       update_interactive_panel <- function(i, a, session){
@@ -967,8 +957,8 @@ customplotcontrols <- function(input, output, session){
   
   observeEvent(input$btn_addplot, {
  
-      add_widget()
-      shinyjs::hide("btn_updateplot")
+     add_widget()
+     shinyjs::hide("btn_updateplot")
     
   })
 
