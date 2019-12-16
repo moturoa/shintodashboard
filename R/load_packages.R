@@ -5,6 +5,7 @@ suppressPackageStartupMessages({
   #                            password="<<MYPASSWORD>>")
   
   library(shintoplotwrappers)
+  library(lifecycle)
   
   library(ggplot2)
   library(shiny)
