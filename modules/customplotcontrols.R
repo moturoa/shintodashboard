@@ -114,11 +114,14 @@ customplotcontrolsUI <- function(id){
                      )
                        
                 ),
-                # tabPanel("3. Filter",
-                #          
-                #       uiOutput(ns("filter_controls"))
-                #          
-                # ),
+                
+                tabPanel("3. Filter",
+
+                      actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
+                      tags$div(id = ns("filter_placeholder"))
+
+                ),
+                
                 tabPanel("3. Interactief",
                          
                          
@@ -354,16 +357,15 @@ customplotcontrols <- function(input, output, session){
   
   ns <- session$ns
   
-  
-  # observe({
-  #   
-  #   out <- load_dashboard("wbmdemo5")
-  #   
-  #   for(i in seq_along(out)){
-  #     add_widget(plotarguments = out[[i]])
-  #   }
-  #   
-  # })
+  observe({
+
+    out <- load_dashboard("wbmdemo5")
+
+    for(i in seq_along(out)){
+      add_widget(plotarguments = out[[i]])
+    }
+
+  })
   
   # output$txt_debug <- renderPrint({
   #   reactiveValuesToList(input)
@@ -386,6 +388,19 @@ customplotcontrols <- function(input, output, session){
                       choices = cols)
     
   })
+  
+  observeEvent(input$btn_add_filter, {
+
+    insertUI(paste0("#", session$ns("filter_placeholder")), 
+             "beforeEnd", 
+             columnFilterUI(session$ns("testid"), current_dataset())
+            )
+    
+    callModule(columnFilter, "testid", current_dataset())
+    
+    
+  })
+  
   # 
   # output$filter_controls <- renderUI({
   #   
