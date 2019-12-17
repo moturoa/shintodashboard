@@ -406,73 +406,6 @@ customplotcontrols <- function(input, output, session){
     
   })
   
-  # 
-  # output$filter_controls <- renderUI({
-  #   
-  #   req(current_dataset())
-  #   
-  #   if(is_empty(input$plot_xvar)){
-  #     tags$p("Selecteer eerst de X en Y variabelen.")
-  #   } else {
-  #     req(input$plot_yvar)
-  #   
-  #     make_controls <- function(data, label, force_factor = FALSE, idbase="filter"){
-  #       data <- data[!is.na(data)]
-  #       
-  #       if(force_factor | is.factor(data) | is.character(data)){
-  #         
-  #         el <- tagList(
-  #           h4(label),
-  #           selectInput(session$ns(glue("{idbase}3")), "", 
-  #                       width = 300,
-  #                       choices = sort(unique(data)), multiple=TRUE)
-  #         )
-  #         
-  #       } else {
-  #         
-  #         if(is.numeric(data)){
-  #           
-  #           el <- tagList(
-  #             h4(label),
-  #             side_by_side(
-  #               numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width = 100),
-  #               numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width = 100)
-  #             ),
-  #             br()
-  #           ) 
-  #           
-  #         }
-  #         
-  #         if(inherits(data, "Date")){
-  #           
-  #           el <- tagList(
-  #             h4(label),
-  #             dateRangeInput(session$ns(glue("{idbase}4")), "", 
-  #                            start = min(data), 
-  #                            end = max(data),
-  #                            width = 300,
-  #                            format = "dd/mm/yy", 
-  #                            language = "nl")
-  #           )
-  #           
-  #         }
-  #         
-  #       }
-  #       return(el)
-  #     }
-  #     
-  #     tagList(
-  #       make_controls(current_dataset()[[input$plot_xvar]], "X variabele", 
-  #                     idbase="filterx", force_factor = input$chk_factor_x),
-  #       make_controls(current_dataset()[[input$plot_yvar]], "Y variabele", 
-  #                     idbase="filtery", force_factor = input$chk_factor_y),
-  #       make_controls(current_dataset()[[input$plot_groupvar]], "Groep variabele", 
-  #                     idbase="filterg", force_factor = TRUE)
-  #     )
-  #   }
-  #   
-  # })
-  
 
   
   # 
@@ -654,23 +587,14 @@ customplotcontrols <- function(input, output, session){
   observe({
     
     req(input$chk_usegroup)
+    shinyjs::toggle("plot_groupvar", condition = input$chk_usegroup)
     
-    
-    if(input$chk_usegroup){
-      shinyjs::show("plot_groupvar")
-    } else {
-      shinyjs::hide("plot_groupvar")
-    }
   })
   
   observe({
-    req(input$plot_type)
     
-    if(input$plot_type == "Barplot"){
-      shinyjs::show("bar_position")
-    } else {
-      shinyjs::hide("bar_position")
-    }
+    req(input$plot_type)
+    shinyjs::toggle("bar_position", condition = input$plot_type == "Barplot")
     
   })
   
@@ -678,12 +602,8 @@ customplotcontrols <- function(input, output, session){
     
     item <- input$select_annotation
     req(item)
-    
-    if(item != "None"){
-      shinyjs::show("abline_controls")
-    } else {
-      shinyjs::hide("abline_controls")
-    }
+    shinyjs::toggle("abline_controls", condition = item != "None")
+
   })
 
   observeEvent(input$btn_save_dashboard, {
@@ -704,12 +624,7 @@ customplotcontrols <- function(input, output, session){
     current_ids <<- c()
     plot_settings <<- NULL
   }
-  
-  observeEvent(input$btn_dashboard_wissen, {
-    
-    clear_dashboard()
-    
-  })
+
   
   observeEvent(input$btn_load_dashboard,{
     
@@ -895,8 +810,32 @@ customplotcontrols <- function(input, output, session){
       }
       
       # Panel 3 - Filters
-      # ctn
-      # !!!
+      insert_defined_filter <- function(preset){
+        
+        new_id <- uuid::UUIDgenerate()
+        
+        insertUI(paste0("#", session$ns("filter_placeholder")), 
+                 "beforeEnd", 
+                 columnFilterUI(session$ns(new_id), current_dataset(), preset = preset)
+        )
+        
+        rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset(),
+                                                   preset = preset)
+        
+      }
+      
+      # Oude filters weghalen
+      for(j in seq_along(rv$filter_settings)){
+        id <- session$ns(names(rv$filter_settings)[j])
+        removeUI(paste0("#",id))
+      }
+      rv$filter_settings <- NULL
+      
+      # Opgeslagen filters erin plakken.
+      for(obj in a$filters){
+        insert_defined_filter(obj)
+      }
+
       
       # Panel 4 - Interactive
       update_interactive_panel <- function(i, a, session){

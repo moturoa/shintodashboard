@@ -1,21 +1,26 @@
 
-columnFilterUI <- function(id, data){
+columnFilterUI <- function(id, data, preset = NULL){
   
+  col_select <- if(is.null(preset))NULL else preset$column
   
   ns <- NS(id)
   
-  tagList(
-    side_by_side(
-      selectInput(ns("select_column"), "Filter deze kolom", choices = names(data)),
-      uiOutput(ns("column_filter_ui")),
-      vertical_align = TRUE
-    ),
-    tags$br()
+  tags$div(id = id, 
+    tagList(
+      side_by_side(
+        selectInput(ns("select_column"), 
+                    "Filter deze kolom", 
+                    choices = names(data),
+                    selected = col_select),
+        uiOutput(ns("column_filter_ui")),
+        vertical_align = TRUE
+      ),
+      tags$br()
+    )
   )
-  
 }
 
-columnFilter <- function(input, output, session, data){
+columnFilter <- function(input, output, session, data, preset = NULL){
   
   out <- reactiveValues(
     column = NULL,
@@ -24,6 +29,7 @@ columnFilter <- function(input, output, session, data){
   )
   
   columnData <- reactive({
+    
     req(input$select_column)
     column <- data[[input$select_column]]
     if(is.factor(column))column <- as.character(column)
@@ -36,16 +42,46 @@ columnFilter <- function(input, output, session, data){
     column <- columnData()
     col_class <- class(column)
     
-    ui <- switch(col_class, 
-           
-           numeric = numericRangeInput(session$ns("column_filter"), "Min / Max",
-                                       value = c(min(column, na.rm = TRUE),
-                                                 max(column, na.rm = TRUE))),
-           Date = dateRangeInput(session$ns("column_filter"), "Min / Max",
-                                       start = min(column, na.rm = TRUE),
-                                       end = max(column, na.rm = TRUE)),
-           character = selectInput(session$ns("column_filter"), "Selecteer", choices = unique(column), multiple = TRUE)
-           )
+    if(col_class == "numeric"){
+      
+      if(!is.null(preset)){
+        vals <- preset$value
+      } else {
+        vals <- c(min(column, na.rm = TRUE), 
+                  max(column, na.rm = TRUE))
+      }
+      
+      ui <- numericRangeInput(session$ns("column_filter"), "Min / Max",
+                        value = vals)
+    }
+    
+    if(col_class == "Date"){
+      
+      if(!is.null(preset)){
+        vals <- preset$value
+      } else {
+        vals <- c(min(column, na.rm = TRUE), 
+                  max(column, na.rm = TRUE))
+      }
+      
+      ui <- dateRangeInput(session$ns("column_filter"), "Min / Max",
+                     start = vals[1],  end = vals[2])
+      
+    }
+    
+    if(col_class %in% c("character","factor")){
+      
+      if(!is.null(preset)){
+        vals <- preset$value
+      } else {
+        vals <- NULL
+      }
+      
+      ui <- selectInput(session$ns("column_filter"), "Selecteer", 
+                        choices = unique(column), 
+                        selected = vals,
+                        multiple = TRUE)
+    }
     
     output$column_filter_ui <- renderUI(ui)
     
