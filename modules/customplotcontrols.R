@@ -279,14 +279,7 @@ customplotcontrolsUI <- function(id){
                      )
                       
                 ),
-                
-                # tabPanel("Thema",
-                # 
-                #     uiOutput(ns("theme_controls"))
-                #          
-                # ),
-
-                
+ 
                 tabPanel(tagList(icon("play"), "Voltooien"),
                          
                      tags$p("Maak de plot aan volgens de huidige instellingen.",
@@ -392,6 +385,7 @@ customplotcontrols <- function(input, output, session){
     
   })
   
+  # Data filter toevoegen
   observeEvent(input$btn_add_filter, {
 
     new_id <- uuid::UUIDgenerate()
@@ -407,30 +401,9 @@ customplotcontrols <- function(input, output, session){
   })
   
 
-  
-  # 
-  # output$theme_controls <- renderUI({
-  #   
-  #   tagList(
-  #     
-  #     selectInput(ns("select_theme"),
-  #                 label_tooltip("Select theme","Select ggplot2 theme, affects styling"),
-  #                 choices = c("theme_minimal","theme_bw","theme_classic",
-  #                             "theme_linedraw","theme_light",
-  #                             "theme_base","theme_calc","theme_clean","theme_economist",
-  #                             "theme_economist_white","theme_excel","theme_few",
-  #                             "theme_fivethirtyeight","theme_foundation",
-  #                             "theme_gdocs","theme_hc","theme_igray","theme_tufte","theme_wsj"))
-  #     
-  #   )
-  #   
-  # })
-  
-  
+  # Lokale functie om interactieve settings te lezen.
   read_interactive_controls <- function(){
     
-    #req(input$ia_select_nelements)
-
     if(is_empty(input$ia_select_variable1) || input$ia_select_nelements == "0"){
       
       list(
@@ -454,6 +427,7 @@ customplotcontrols <- function(input, output, session){
     
   }
   
+  # Lokale functie om kleuren palette te lezen.
   read_palette <- function(){
     pal <- c()
     for(i in 1:12){
@@ -463,7 +437,42 @@ customplotcontrols <- function(input, output, session){
   return(pal)
   }
   
-  read_plot_settings <- function(){
+  
+  observeEvent(input$btn_load_palette, {
+    
+    pal <- load_palette(input$select_palette)
+    
+    for(i in seq_along(pal)){
+      updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
+    }
+    
+  })
+  
+  observeEvent(input$btn_randomize_palette, {
+    
+    new_pal <- sample(read_palette())
+    
+    for(i in 1:12){
+      updateColourInput(session, paste0("sel_color",i), value = new_pal[i])
+    }
+    
+  })
+  
+  observeEvent(input$btn_save_palette, {
+    
+    req(input$txt_palette_name)
+    json <- toJSON(read_palette())
+    
+    writeLines(json, file.path("cache/palettes", paste0(input$txt_palette_name, ".json")))
+    updateTextInput(session, "txt_palette_name", value = "")
+  })
+  
+  
+#----- Read plot settings
+  
+  # Plot settings, panels 1 en 2.
+  # 'Main' settings: dataset, kolommen, plot type.
+  settings_plot_main <- reactive(
     
     list(
       dataset = input$select_dataset,
@@ -474,14 +483,20 @@ customplotcontrols <- function(input, output, session){
       
       pietype = input$pietype,
       pienarm = input$pienarm,
-      
       xvar = as.character(input$plot_xvar),
       factor_x = input$chk_factor_x,
       factor_y = input$chk_factor_y,
       yvar = as.character(input$plot_yvar),
       usegroup = input$chk_usegroup,
-      groupvar = as.character(input$plot_groupvar),
-      
+      groupvar = as.character(input$plot_groupvar)
+    )
+    
+  )
+  
+  # Labels, titels, legenda, etc.
+  settings_plot_labels <- reactive({
+    
+    list(
       title = input$plot_title,
       subtitle = input$plot_subtitle,
       xlab = input$plot_xlab,
@@ -494,52 +509,56 @@ customplotcontrols <- function(input, output, session){
       labelanglex =  input$sel_labelanglex,
       labelangley =  input$sel_labelangley,
       nolabelsx = input$chk_removelabelsx,
-      nolegend =  input$chk_nolegend,
-      
+      nolegend =  input$chk_nolegend
+    )
+    
+  })
+  
+  # Kleuren, symbool vorm, thema, etc.
+  settings_plot_design <- reactive({
+    
+    list(
       palette = read_palette(),
       shape = input$scatter_shape,
-      theme = "theme_minimal",
-      
+      theme = "theme_minimal"
+    )
+    
+  })        
+  
+  settings_plot_annotation <- reactive({
+    
+    list(
       annotate_bars = input$check_annotate_bars,
       annotation_type = input$select_annotation,
       line_coordinate = input$num_line_coordinate,
-      line_colour = input$colour_annotation,
-      
+      line_colour = input$colour_annotation
+    )
+    
+  })
+  
+  # Data filters, interactieve filters.
+  settings_plot_dynamic <- reactive({
+  
+    list(
       filters = lapply(rv$filter_settings, reactiveValuesToList),
       interactive = read_interactive_controls()
-      
+    )  
+    
+  })
+  
+
+  read_plot_settings <- function(){
+    
+    c(
+      settings_plot_main(),
+      settings_plot_labels(),
+      settings_plot_design(),
+      settings_plot_annotation(),
+      settings_plot_dynamic()
     )
+    
   }
-
   
-  observeEvent(input$btn_load_palette, {
-    
-    pal <- load_palette(input$select_palette)
-    
-    for(i in seq_along(pal)){
-      updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
-    }
-      
-  })
-  
-  observeEvent(input$btn_randomize_palette, {
-
-    new_pal <- sample(read_palette())
-    
-    for(i in 1:12){
-      updateColourInput(session, paste0("sel_color",i), value = new_pal[i])
-    }
-
-  })
-  
-  observeEvent(input$btn_save_palette, {
-    
-    req(input$txt_palette_name)
-    json <- toJSON(read_palette())
-    
-    writeLines(json, file.path("cache/palettes", paste0(input$txt_palette_name, ".json")))
-    updateTextInput(session, "txt_palette_name", value = "")
-  })
   
   observeEvent(input$plot_type, {
     
@@ -876,9 +895,6 @@ customplotcontrols <- function(input, output, session){
       for(i in 1:12){
         updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
       }
-      
-      # Panel 7 - Theme
-      updateSelectInput(session, "select_theme", selected = a$theme)
       
     }
     
