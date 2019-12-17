@@ -74,13 +74,16 @@ columnFilter <- function(input, output, session, data, preset = NULL){
       if(!is.null(preset)){
         vals <- preset$value
       } else {
-        vals <- NULL
+        vals <- unique(column)
       }
       
-      ui <- selectInput(session$ns("column_filter"), "Selecteer", 
+      ui <- pickerInput(session$ns("column_filter"), "Selecteer", 
                         choices = unique(column), 
                         selected = vals,
-                        multiple = TRUE)
+                        multiple = TRUE,
+                        options = list(`actions-box` = TRUE,
+                                       `deselect-all-text` = "Alles uit",
+                                       `select-all-text` = "Alles aan"))
     }
     
     output$column_filter_ui <- renderUI(ui)
@@ -99,35 +102,3 @@ columnFilter <- function(input, output, session, data, preset = NULL){
 return(out)
 }
 
-
-# h4(label),
-#           selectInput(session$ns(glue("{idbase}3")), "", 
-#                       width = 300,
-#                       choices = sort(unique(data)), multiple=TRUE)
-#         )
-#         
-#       } else {
-#         
-#         if(is.numeric(data)){
-#           
-#           el <- tagList(
-#             h4(label),
-#             side_by_side(
-#               numericInput(session$ns(glue("{idbase}1")), "min", value=min(data), width = 100),
-#               numericInput(session$ns(glue("{idbase}2")), "max", value=max(data), width = 100)
-#             ),
-#             br()
-#           ) 
-#           
-#         }
-#         
-#         if(inherits(data, "Date")){
-#           
-#           el <- tagList(
-#             h4(label),
-#             dateRangeInput(session$ns(glue("{idbase}4")), "", 
-#                            start = min(data), 
-#                            end = max(data),
-#                            width = 300,
-#                            format = "dd/mm/yy", 
-#                            language = "nl")
