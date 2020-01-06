@@ -614,16 +614,57 @@ customplotcontrols <- function(input, output, session){
     
   }
   
+  # Button: plot maken
   observeEvent(input$btn_addplot, {
     
-    add_widget()
-    shinyjs::hide("btn_updateplot")
+
+    ok <- TRUE
+    # 
+    # input$plot_yvar
+    if(is_empty(input$plot_xvar)){
+      fleetingMessage("Selecteer een variabele voor de X-as.", status = "danger")
+      updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
+      ok <- FALSE
+    }
+    if(is_empty(input$plot_yvar)){
+      fleetingMessage("Selecteer een variabele voor de Y-as.", status = "danger")
+      updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
+      ok <- FALSE
+    }
+    
+    if(ok){
+      add_widget()
+      shinyjs::hide("btn_updateplot")  
+    }
+    
+    
+  })
+  
+  # Button: update plot
+  observeEvent(input$btn_updateplot, {
+    
+    args <- read_plot_settings()
+    plot_settings[[rv$current_id_container]] <<- args
+    
+    # ids of the interactive elements on the current container, if any
+    id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)
+    
+    output[[rv$current_id_plot]] <- renderPlot({
+      
+      # settings of those interactive elements
+      interactive_vals <- list(input[[id_interactive[1]]], 
+                               input[[id_interactive[2]]])
+      
+      isolate(
+        custom_plot(plotarguments = args, interactive = interactive_vals)
+      )
+      
+    }, height = 280)
     
   })
   
   
-  
-  
+  # Interactieve elementen
   observe({
     
     nel <- as.numeric(input$ia_select_nelements)
@@ -667,27 +708,7 @@ customplotcontrols <- function(input, output, session){
   })
   
   
-  observeEvent(input$btn_updateplot, {
-    
-    args <- read_plot_settings()
-    plot_settings[[rv$current_id_container]] <<- args
-    
-    # ids of the interactive elements on the current container, if any
-    id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)
-    
-    output[[rv$current_id_plot]] <- renderPlot({
-      
-      # settings of those interactive elements
-      interactive_vals <- list(input[[id_interactive[1]]], 
-                               input[[id_interactive[2]]])
-      
-      isolate(
-        custom_plot(plotarguments = args, interactive = interactive_vals)
-      )
-      
-    }, height = 280)
-    
-  })
+
   
   
   

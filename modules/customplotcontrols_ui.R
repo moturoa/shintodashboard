@@ -7,8 +7,8 @@ customplotcontrolsUI <- function(id){
   fluidPage(
     fluidRow(
 
-            tabBox( id = "controls_tab_box", width = 12, 
-                tabPanel("1. Start",
+            tabBox( id = ns("controls_tab_box"), width = 12, 
+                tabPanel("1. Start", value = "start",
                 
                      tagList(
                        selectInput(ns("select_dataset"), 
@@ -58,7 +58,7 @@ customplotcontrolsUI <- function(id){
                      )
                        
                 ),       
-                tabPanel("2. Kolommen",
+                tabPanel("2. Kolommen", value = "kolommen",
                      
                          
                      tagList(
@@ -115,7 +115,7 @@ customplotcontrolsUI <- function(id){
                        
                 ),
                 
-                tabPanel("3. Filter",
+                tabPanel("3. Filter", value = "filter",
 
                       tags$br(),
                       actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
@@ -124,10 +124,11 @@ customplotcontrolsUI <- function(id){
 
                 ),
                 
-                tabPanel("3. Interactief",
+                tabPanel("3. Interactief", value = "interactief",
                          
                          
                      tagList(
+                       tags$p("Selecteer het aantal interactieve filters voor de plot."),
                        awesomeRadio(ns("ia_select_nelements"),
                                     label_tooltip("Aantal interactieve elementen",
                                                   "Voeg hier (optioneel) interactieve elementen toe aan de plot"),
@@ -144,7 +145,7 @@ customplotcontrolsUI <- function(id){
                      )
                        
                 ),
-                tabPanel("4. Labels",
+                tabPanel("4. Labels", value = "labels",
                          
                          fluidRow(    
                            column(4,    
@@ -195,7 +196,7 @@ customplotcontrolsUI <- function(id){
                 ),
                 
 
-                tabPanel("5. Annotatie",
+                tabPanel("5. Annotatie", value = "annotatie",
                       
                          tagList(
                            shinyjs::hidden(
@@ -228,7 +229,7 @@ customplotcontrolsUI <- function(id){
                          )
                          
                 ),
-                tabPanel("6. Kleuren",
+                tabPanel("6. Kleuren", value = "kleuren",
                          
                      fluidRow(
                        column(8,
@@ -280,7 +281,7 @@ customplotcontrolsUI <- function(id){
                       
                 ),
  
-                tabPanel(tagList(icon("play"), "Voltooien"),
+                tabPanel(tagList(icon("play"), "Voltooien"), value = "voltooien",
                          
                      tags$p("Maak de plot aan volgens de huidige instellingen.",
                             "De plot wordt op het dashboard geplaatst."),
@@ -297,7 +298,7 @@ customplotcontrolsUI <- function(id){
                      )
                 ),
                 
-                tabPanel(tagList(icon("table"), "Dashboard"),
+                tabPanel(tagList(icon("table"), "Dashboard"), value = "dashboard",
                          
                    tagList(
                      tags$p("Huidig dashboard opslaan, of een dashboard uit de database laden."),

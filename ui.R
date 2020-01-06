@@ -33,10 +33,11 @@ dashboardPagePlus (
 
     includeCSS("www/style.css"),
     includeCSS("www/buttons.css"),
+    includeCSS("www/fleetingMessage.css"),
+    
     includeScript("www/tooltip.js"),
     includeScript("www/plotorder.js"),
-
-
+    
     tabItems(
       tabItem(tabName = "tabDashboard",
 
@@ -56,7 +57,8 @@ dashboardPagePlus (
         
       )
 
-    )
+    ),
+    tags$div(id = "msgplaceholder")
   ),
   
   rightsidebar = rightSidebar(
