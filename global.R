@@ -11,15 +11,23 @@ source("modules/columnFilter.R")
 if(!dir.exists("cache"))dir.create("cache")
 if(!dir.exists("cache/palettes"))dir.create("cache/palettes")
 
-available_rds <- dir("data")
+# Datasets
+datasets_key <- c(
+  "Originele tabel" = "zawa_plancapaciteit_origineel.rds",    
+  "Huur / Koop" = "zawa_plancapaciteit_naar_huurkoop.rds",   
+  "Prijsklasse" = "zawa_plancapaciteit_naar_prijsklasse.rds",
+  "Huur / Koop en Prijsklasse" = "zawa_plancapaciteit_naar_huurkoop_en_prijsklasse.rds",
+  "Leverjaar" = "zawa_plancapaciteit_naar_leverjaar.rds",            
+  "Woningtype" = "zawa_plancapaciteit_naar_woningtype.rds")                            
+                         
+# Lees alle datasets.
+datasets_paths <- file.path("data", datasets_key)
+datasets_content <- lapply(datasets_paths, readRDS) %>% 
+  setNames(datasets_key)
 
-available_datasets <- tools::file_path_sans_ext(basename(available_rds))
 
-for(i in seq_along(available_rds)){
-	assign(available_datasets[i], readRDS(file.path("data", available_rds[i])))
-}
-
-
+# Global variables. Gebruikt om plot settings in op te slaan.
+# (moet eigenlijk naar een reactiveval?)
 current_ids <- c()
 plot_settings <- list()
 

@@ -2,7 +2,9 @@ function(input, output, session){
   
 
   
-  out <- callModule(customplotcontrols, "controls")
+  callModule(customplotcontrols, "controls",
+             data_key = datasets_key,
+             datasets = datasets_content)
   
   
 }

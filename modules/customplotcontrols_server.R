@@ -1,5 +1,5 @@
 
-customplotcontrols <- function(input, output, session){
+customplotcontrols <- function(input, output, session, data_key, datasets){
   
   jqui_sortable('#placeholder', options = list(opacity = 0.5))
   
@@ -10,11 +10,18 @@ customplotcontrols <- function(input, output, session){
     filter_settings = NULL
   )
   
+  # Datasets
+  
+  # Update keuze menu.
+  updateSelectInput(session, "select_dataset", choices = data_key)
+  
+  # Lees geselecteerde dataset
   current_dataset <- reactive({
     req(input$select_dataset)
-    get(input$select_dataset)
+    datasets[[input$select_dataset]]
   })
   
+  # Kolom namen van geselecteerde dataset
   current_available_columns <- reactive({
     names(current_dataset())
   })
@@ -167,7 +174,7 @@ customplotcontrols <- function(input, output, session){
     updateSelectInput(session, "select_dataset", selected = a$dataset)
     
     # Make sure to load data first; reactive current_dataset() has not updated yet.
-    current_columns <- names(get(a$dataset))
+    current_columns <- names(datasets[[a$dataset]])
     
     updateSelectInput(session, "plot_type", selected = a$plottype)
     updateAwesomeRadio(session,  "bar_position", selected = a$bar_position)
@@ -286,7 +293,7 @@ customplotcontrols <- function(input, output, session){
   
   update_plot_dynamic <- function(a, session){
     
-    current_columns <- names(get(a$dataset))
+    current_columns <- names(datasets[[a$dataset]])
       
     #---- Filters
     insert_defined_filter <- function(preset){
@@ -559,7 +566,7 @@ customplotcontrols <- function(input, output, session){
     
     current_ids <<- c(current_ids, id_container)
     
-    dataset <- get(plot_settings[[id_container]]$dataset)
+    dataset <- datasets[[plot_settings[[id_container]]$dataset]]
     
     insertUI(
       "#placeholder", where = "beforeEnd",
@@ -586,6 +593,7 @@ customplotcontrols <- function(input, output, session){
       
       isolate(
         custom_plot(plotarguments = plot_settings[[id_container]],
+                    data = dataset,
                     interactive = interactive_vals)
       )
       
@@ -656,7 +664,9 @@ customplotcontrols <- function(input, output, session){
                                input[[id_interactive[2]]])
       
       isolate(
-        custom_plot(plotarguments = args, interactive = interactive_vals)
+        custom_plot(plotarguments = args, 
+                    data = datasets[[args$dataset]],
+                    interactive = interactive_vals)
       )
       
     }, height = 280)

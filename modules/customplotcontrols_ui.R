@@ -15,7 +15,7 @@ customplotcontrolsUI <- function(id){
                                    label_tooltip("Dataset", 
                                                  "Selecteer een dataset."),
                                    width = 300,
-                                   choices = available_datasets),
+                                   choices = NULL),
                        
                        
                        selectInput(ns("plot_type"), 
