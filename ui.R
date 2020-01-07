@@ -41,19 +41,17 @@ dashboardPagePlus (
     tabItems(
       tabItem(tabName = "tabDashboard",
 
-          fluidRow(
-            div(id="placeholder")
-          )  
+        fluidRow(
+          div(id="placeholder")
+        )  
               
       ),
 
       tabItem(tabName = "tabConfigure",
-        fluidRow(
-          
-          customplotcontrolsUI("controls")    
-          
-        )  
         
+        fluidRow(
+          customplotcontrolsUI("controls")
+        )  
         
       )
 

@@ -491,7 +491,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
         label <- paste0("label",i)
         value <- interactive_vals[[i]]
         
-        column_data <- data[,interactive[[varlab]]][[1]]
+        column_data <- data[,interactive[[varlab]]]
         
         if(interactive[[ellab]] == "selectInput"){
           el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
@@ -609,7 +609,6 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     })
     
     
-    
     observeEvent(input[[id_editbutton]], {
       
       update_inputs(plot_settings[[id_container]], session)
@@ -624,11 +623,9 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   
   # Button: plot maken
   observeEvent(input$btn_addplot, {
-    
-
+  
     ok <- TRUE
-    # 
-    # input$plot_yvar
+    
     if(is_empty(input$plot_xvar)){
       fleetingMessage("Selecteer een variabele voor de X-as.", status = "danger")
       updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")

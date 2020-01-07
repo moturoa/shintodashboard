@@ -15,7 +15,6 @@ if(!dir.exists("cache/palettes"))dir.create("cache/palettes")
 datasets_key <- c(
   "Originele tabel" = "zawa_plancapaciteit_origineel.rds",    
   "Huur / Koop" = "zawa_plancapaciteit_naar_huurkoop.rds",   
-  "Prijsklasse" = "zawa_plancapaciteit_naar_prijsklasse.rds",
   "Huur / Koop en Prijsklasse" = "zawa_plancapaciteit_naar_huurkoop_en_prijsklasse.rds",
   "Leverjaar" = "zawa_plancapaciteit_naar_leverjaar.rds",            
   "Woningtype" = "zawa_plancapaciteit_naar_woningtype.rds")                            
