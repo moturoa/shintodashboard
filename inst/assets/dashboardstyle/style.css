@@ -1,0 +1,22 @@
+.cpbox{
+  margin: 20px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  padding: 10px;
+}
+
+.plotbutton{
+  border: 0;
+  background-color: transparent;
+}
+
+.tab-content{
+  padding: 20px;
+}
+
+#controls_tab_box{
+  margin: 10px;
+}
+
+.shiny-input-container[data-shiny-input-type = "colour"]{
+  margin-bottom: 2px !important;
+}

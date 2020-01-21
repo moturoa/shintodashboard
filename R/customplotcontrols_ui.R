@@ -1,10 +1,13 @@
-
+#' Shinto dashboard maker, UI function
+#' @export
 customplotcontrolsUI <- function(id){
   
   ns <- NS(id)
   
+  color_palettes <- c(tools::file_path_sans_ext(dir("cache/palettes", pattern = "[.]json$")), 
+                      "rich.colors", rownames(brewer.pal.info))
   
-  fluidPage(
+  out <- fluidPage(
     fluidRow(
 
             tabBox( id = ns("controls_tab_box"), width = 12, 
@@ -222,7 +225,7 @@ customplotcontrolsUI <- function(id){
                                       numericInput(ns("num_line_coordinate"), "X-as waarde:", 
                                                    value = 0, width = 300),
                                       tags$div(style = "width: 200px;",
-                                               colourInput(ns("colour_annotation"), "Kleur", value = "red")
+                                               colourpicker::colourInput(ns("colour_annotation"), "Kleur", value = "red")
                                       )
                              )
                            )
@@ -260,7 +263,7 @@ customplotcontrolsUI <- function(id){
                               lapply(1:12, function(i){  
                                 
                                 div(style="width: 110px; display: inline-block;", 
-                                    colourInput(ns(paste0("sel_color",i)), as.character(i), 
+                                    colourpicker::colourInput(ns(paste0("sel_color",i)), as.character(i), 
                                                 value = gplots::rich.colors(12)[i])
                                 )
                                 
@@ -317,10 +320,6 @@ customplotcontrolsUI <- function(id){
                          
                 )
                 
-                # tabPanel("Debug",
-                #          
-                #          verbatimTextOutput(ns("txt_debug"))
-                # )
               )
               
     
@@ -328,6 +327,8 @@ customplotcontrolsUI <- function(id){
       )
       
   )
+  
+attachDependencies(out)
    
 }
 

@@ -1,4 +1,5 @@
-
+#' Shinto dashboard maker, server function
+#' @export
 customplotcontrols <- function(input, output, session, data_key, datasets){
   
   jqui_sortable('#placeholder', options = list(opacity = 0.5))
@@ -7,7 +8,8 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     all_ids = NULL,
     current_id_container = NULL,
     current_id_plot = NULL,
-    filter_settings = NULL
+    filter_settings = NULL,
+    plot_settings = NULL
   )
   
   # Datasets
@@ -118,7 +120,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     pal <- load_palette(input$select_palette)
     
     for(i in seq_along(pal)){
-      updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
+      colourpicker::updateColourInput(session, paste0("sel_color",input$num_start_palette + (i - 1)), value = pal[i])
     }
     
   })
@@ -128,7 +130,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     new_pal <- sample(read_palette())
     
     for(i in 1:12){
-      updateColourInput(session, paste0("sel_color",i), value = new_pal[i])
+      colourpicker::updateColourInput(session, paste0("sel_color",i), value = new_pal[i])
     }
     
   })
@@ -254,7 +256,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     
     # Panel 6 - Colors
     for(i in 1:12){
-      updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
+      colourpicker::updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
     }
     updateSelectInput(session, "scatter_shape", selected = a$shape)
     
@@ -277,7 +279,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     updateCheckboxInput(session, "check_annotate_bars", value = as.logical(a$annotate_bars))
     updateSelectInput(session, "select_annotation", selected = a$annotation_type)
     updateNumericInput(session, "num_line_coordinate", value = a$line_coordinate)
-    updateColourInput(session, "colour_annotation", value = a$line_colour)
+    colourpicker::updateColourInput(session, "colour_annotation", value = a$line_colour)
     
   }
   
@@ -436,21 +438,20 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   
   observeEvent(input$btn_save_dashboard, {
     
-    save_dashboard(plot_settings[input$customplotids], input$txt_dashboard_name)
+    save_dashboard(rv$plot_settings[input$customplotids], input$txt_dashboard_name)
     
     updateSelectInput(session, "select_dashboard", 
                       choices = list_dashboards())
   })
   
   clear_dashboard <- function(){
-    ids <- paste0("#", names(plot_settings))
+    ids <- paste0("#", names(rv$plot_settings))
     
     for(i in ids){
       removeUI(i)
     }
     
-    current_ids <<- c()
-    plot_settings <<- NULL
+    rv$plot_settings <<- NULL
   }
   
   
@@ -559,21 +560,21 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     id_interactive <- paste0(id_container, "_interactive_", 1:2)
     
     if(is.null(plotarguments)){
-      plot_settings[[id_container]] <<- read_plot_settings()
+      rv$plot_settings[[id_container]] <<- read_plot_settings()
     } else {
-      plot_settings[[id_container]] <<- plotarguments
+      rv$plot_settings[[id_container]] <<- plotarguments
     }
     
-    current_ids <<- c(current_ids, id_container)
     
-    dataset <- datasets[[plot_settings[[id_container]]$dataset]]
+    
+    dataset <- datasets[[rv$plot_settings[[id_container]]$dataset]]
     
     insertUI(
       "#placeholder", where = "beforeEnd",
       
       widget_ui(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
-                interactive = plot_settings[[id_container]]$interactive,
-                interactive_vals = plot_settings[[id_container]]$interactive_vals,
+                interactive = rv$plot_settings[[id_container]]$interactive,
+                interactive_vals = rv$plot_settings[[id_container]]$interactive_vals,
                 data = dataset)
     )
     
@@ -581,7 +582,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
       interactive_vals <- list(input[[id_interactive[1]]], 
                                input[[id_interactive[2]]])
       
-      plot_settings[[id_container]]$interactive_vals <<- interactive_vals
+      rv$plot_settings[[id_container]]$interactive_vals <<- interactive_vals
       
     })
     
@@ -592,7 +593,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
                                input[[id_interactive[2]]])
       
       isolate(
-        custom_plot(plotarguments = plot_settings[[id_container]],
+        custom_plot(plotarguments = rv$plot_settings[[id_container]],
                     data = dataset,
                     interactive = interactive_vals)
       )
@@ -602,16 +603,16 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     
     observeEvent(input[[id_closebutton]], {
       
-      plot_settings[[id_container]] <<- NULL
+      rv$plot_settings[[id_container]] <<- NULL
       removeUI(selector = paste0("#", id_container), session = session)
-      current_ids <<- current_ids[-match(id_container, current_ids)]
+      
       
     })
     
     
     observeEvent(input[[id_editbutton]], {
       
-      update_inputs(plot_settings[[id_container]], session)
+      update_inputs(rv$plot_settings[[id_container]], session)
       rv$current_id_container <- id_container
       rv$current_id_plot <- id_plot
       
@@ -649,7 +650,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   observeEvent(input$btn_updateplot, {
     
     args <- read_plot_settings()
-    plot_settings[[rv$current_id_container]] <<- args
+    rv$plot_settings[[rv$current_id_container]] <<- args
     
     # ids of the interactive elements on the current container, if any
     id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)

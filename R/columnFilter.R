@@ -1,4 +1,6 @@
-
+#' Shiny module om een kolom te filteren
+#' @rdname columnFilter
+#' @export
 columnFilterUI <- function(id, data, preset = NULL){
   
   col_select <- if(is.null(preset))NULL else preset$column
@@ -20,6 +22,8 @@ columnFilterUI <- function(id, data, preset = NULL){
   )
 }
 
+#' @rdname columnFilter
+#' @export
 columnFilter <- function(input, output, session, data, preset = NULL){
   
   out <- reactiveValues(
