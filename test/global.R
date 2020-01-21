@@ -1,15 +1,5 @@
 
 
-# source("R/load_packages.R")
-# source("R/functions.R")
-# source("R/functions_ui.R")
-# source("R/tooltip.R")
-# source("modules/customplotcontrols_ui.R")
-# source("modules/customplotcontrols_server.R")
-# source("modules/columnFilter.R")
-
-library(shintodashboard)
-
 library(shinydashboard)
 library(shinydashboardPlus)
 library(DT)

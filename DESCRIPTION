@@ -5,7 +5,7 @@ Version: 0.1-2
 Author: Remko Duursma
 Maintainer: Remko Duursma <remko@shintolabs.nl>
 Description: Een Shiny module om custom grafiekjes te maken voor een dashboard.
-Depends: shiny, shintoplotwrappers, dplyr, ggplot2, colourpicker, RColorBrewer, jsonlite, shinyWidgets, shinyjqui, shinyjs, glue, dplyr, lifecycle
+Depends: shiny, shintoplotwrappers, dplyr, ggplot2, colourpicker, RColorBrewer, jsonlite, shinyWidgets, shinyjs, glue, dplyr, lifecycle
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

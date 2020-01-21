@@ -2,8 +2,6 @@
 #' @export
 customplotcontrols <- function(input, output, session, data_key, datasets){
   
-  jqui_sortable('#placeholder', options = list(opacity = 0.5))
-  
   rv <- reactiveValues(
     all_ids = NULL,
     current_id_container = NULL,

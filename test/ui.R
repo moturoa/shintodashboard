@@ -42,7 +42,10 @@ dashboardPagePlus (
       tabItem(tabName = "tabDashboard",
 
         fluidRow(
-          div(id="placeholder")
+          jqui_sortable(
+            div(id="placeholder"), 
+            options = list(opacity = 0.5)
+          )
         )  
               
       ),
