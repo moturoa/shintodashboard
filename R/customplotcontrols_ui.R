@@ -1,11 +1,20 @@
 #' Shinto dashboard maker, UI function
 #' @export
-customplotcontrolsUI <- function(id){
+customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
   
   ns <- NS(id)
   
   color_palettes <- c(tools::file_path_sans_ext(dir("cache/palettes", pattern = "[.]json$")), 
                       "rich.colors", rownames(brewer.pal.info))
+  
+  make_default <- function(x, default = ""){
+    val <- args[[x]]
+    if(is.null(val) || is.na(val)){
+      default
+    } else {
+      val
+    }
+  }
   
   out <- fluidPage(
     fluidRow(
@@ -18,14 +27,16 @@ customplotcontrolsUI <- function(id){
                                    label_tooltip("Dataset", 
                                                  "Selecteer een dataset."),
                                    width = 300,
-                                   choices = NULL),
+                                   choices = data_key,
+                                   selected = make_default("dataset", NULL)
+                                   ),
                        
                        
                        selectInput(ns("plot_type"), 
                                    label_tooltip("Plot type", "Selecteer een van de beschikbare plot types."),
                                    width = 300,
                                    choices = c("Barplot", "Scatter", "Pie chart"),
-                                   selected = "Barplot"),
+                                   selected = make_default("plottype", "Barplot")),
                        
                        shinyjs::hidden(
                          
@@ -33,7 +44,8 @@ customplotcontrolsUI <- function(id){
                                       label_tooltip("Layout van deel bars",
                                                     "Voor een barplot, de positie van de delen: boven op elkaar (stacked) of naast elkaar"),
                                       choices = c("Stacked","Grouped"),
-                                      selected = "Stacked", inline=TRUE)
+                                      selected = make_default("bar_position", "Stacked"), 
+                                      inline = TRUE)
                          
                        ),
                        
@@ -43,7 +55,8 @@ customplotcontrolsUI <- function(id){
                                       label_tooltip("Plot symbool",
                                                     "Soort markers voor de scatter plot"),
                                       choices = c("circles","squares"),
-                                      inline=TRUE)
+                                      selected = make_default("shape","circles"),
+                                      inline = TRUE)
                          
                        ),
                        
@@ -52,10 +65,13 @@ customplotcontrolsUI <- function(id){
                                       label_tooltip("Pie chart type", 
                                                     "Soort pie chart. Alleen Pie mogelijk op het moment."),
                                       choices = c("Pie","Waffle"),
-                                      inline=TRUE)
+                                      selected = make_default("pietype", "Pie"),
+                                      inline = TRUE)
                        ),
                        shinyjs::hidden(
-                         checkboxInput(ns("pienarm"), "Missende waarden weghalen.", value = FALSE)
+                         checkboxInput(ns("pienarm"), 
+                                       "Missende waarden weghalen.", 
+                                       value = make_default("pienarm", FALSE))
                          
                        )
                      )
@@ -70,12 +86,13 @@ customplotcontrolsUI <- function(id){
                          selectInput(ns("plot_xvar"), 
                                      label = label_tooltip("X Variabele", 
                                                            "Selecteer variabele die langs de X-as wordt geplot"),
-                                     choices = NULL, 
+                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                     selected = make_default("xvar", NULL),
                                      width = 300),
                          checkboxInput(ns("chk_factor_x"), 
                                        "Maak factor", 
-                                       value = FALSE, 
-                                       width="50px")
+                                       value = make_default("factor_x", FALSE), 
+                                       width = "50px")
                        ),
                        tags$br(),
                        
@@ -84,12 +101,13 @@ customplotcontrolsUI <- function(id){
                                   selectInput(ns("plot_yvar"), 
                                               label = label_tooltip("Y Variabele", 
                                                                     "Selecteer variabele die langs de Y-as wordt geplot"),
-                                              choices = NULL, 
+                                              choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                              selected = make_default("yvar", NULL),
                                               width = 300),
                                   checkboxInput(ns("chk_factor_y"), 
                                                 "Maak factor",
-                                                value = FALSE, 
-                                                width="50px")
+                                                value = make_default("factor_y", FALSE),
+                                                width = "50px")
                                 )
                        ),
                        shinyjs::hidden(
@@ -99,20 +117,22 @@ customplotcontrolsUI <- function(id){
                                      choices = c("Sum van Y" = "sum", 
                                                  "Gemiddelde van Y" = "mean",
                                                  "Tel aantal rijen in X" = "count"),
-                                     selected = "sum")
+                                     selected = make_default("statfun", "sum"))
                        ),
                        
                        tags$br(),
                        checkboxInput(ns("chk_usegroup"), 
                                      label_tooltip("Gebruik groep variabele", 
                                                    "Voeg een 3e kolom toe, die de data in groepen verdeeld"),
-                                     value = FALSE),
+                                     value = make_default("usegroup", FALSE)),
+                       
                        shinyjs::hidden(
                          selectInput(ns("plot_groupvar"), 
                                      label = label_tooltip("Groep variabele", 
                                                            "Selecteer de kolom die de kleuren in de bar delen aangeeft."),
                                      width = 300,
-                                     choices = NULL)
+                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]),
+                                     selected = make_default("groupvar", NULL))
                        )
                      )
                        
@@ -129,14 +149,13 @@ customplotcontrolsUI <- function(id){
                 
                 tabPanel("3. Interactief", value = "interactief",
                          
-                         
                      tagList(
                        tags$p("Selecteer het aantal interactieve filters voor de plot."),
                        awesomeRadio(ns("ia_select_nelements"),
                                     label_tooltip("Aantal interactieve elementen",
                                                   "Voeg hier (optioneel) interactieve elementen toe aan de plot"),
                                     choices = c("0","1","2"),
-                                    selected = "0",
+                                    selected = if(!is.null(args$interactive$nelements))as.character(args$interactive$nelements) else "0",
                                     inline = TRUE),
                        
                        shinyjs::hidden(
@@ -152,47 +171,62 @@ customplotcontrolsUI <- function(id){
                          
                          fluidRow(    
                            column(4,    
-                                  textInput(ns("plot_title"), "Titel"),
-                                  textInput(ns("plot_subtitle"), "Sub-titel"),
-                                  textInput(ns("plot_xlab"), "X-as label"),
-                                  textInput(ns("plot_ylab"), "Y-as label"),
-                                  textInput(ns("plot_glab"), label_tooltip("Groep label", "Titel voor de legenda"))
+                                  textInput(ns("plot_title"), "Titel", value = make_default("title", "")),
+                                  textInput(ns("plot_subtitle"), "Sub-titel", value = make_default("subtitle", "")),
+                                  textInput(ns("plot_xlab"), "X-as label", value = make_default("xlab", "")),
+                                  textInput(ns("plot_ylab"), "Y-as label", value = make_default("ylab", "")),
+                                  textInput(ns("plot_glab"), label_tooltip("Groep label", "Titel voor de legenda"),
+                                            value = make_default("glab", ""))
                                   
                            ),
                            column(4, 
                                   side_by_side(
                                     numericInput(ns("num_labelsize"), 
                                                  "Tekst grootte",
-                                                 min =8, max=20, value=12, width = "148px"),
+                                                 min =8, max=20, 
+                                                 value = make_default("labelsize", 12), 
+                                                 width = "148px"),
                                     
                                     numericInput(ns("num_labelmargin"),
                                                  label_tooltip("Label marge","Ruimte tussen de as en de labels."),
-                                                 min = 0, max=10, value=2, width = "148px")
+                                                 min = 0, max=10, 
+                                                 value = make_default("labelmargin", 2), 
+                                                 width = "148px")
                                   ),
                                   side_by_side(
                                     selectInput(ns("sel_labelanglex"), 
                                                 "X-as label rotatie",
-                                                choices = c(0,90), width = "148px"),
+                                                choices = c(0,90), 
+                                                selected = make_default("labelanglex", 0),
+                                                width = "148px"),
                                     selectInput(ns("sel_labelangley"), 
                                                 label_tooltip("Y-as label rotatie",
                                                               "Rotatie voor de labels naast de as."),
-                                                choices = c(0,90), width = "148px")
+                                                choices = c(0,90), 
+                                                selected = make_default("labelangley", 0),
+                                                width = "148px")
                                   ),
                                   br(),
                                   side_by_side(vertical_align = TRUE,
-                                               checkboxInput(ns("chk_removelabelsx"), "Geen X-as labels", width="60px"),
+                                               checkboxInput(ns("chk_removelabelsx"), 
+                                                             "Geen X-as labels", 
+                                                             value = make_default("nolabelsx", FALSE),
+                                                             width="60px"),
                                                tags$div(style = "width: 30px;"),
-                                               checkboxInput(ns("chk_nolegend"), "Geen legenda", width="60px")
+                                               checkboxInput(ns("chk_nolegend"), 
+                                                             "Geen legenda", 
+                                                             value = make_default("nolegend", FALSE),
+                                                             width="60px")
                                   ), 
                                   tags$br()
                            ),
                            column(4, 
                                   checkboxInput(ns("chk_includezerox"), 
                                                 label_tooltip("X - begin bij 0", "Start X-as bij nul"),
-                                                value = FALSE),
+                                                value = make_default("includezerox", FALSE)),
                                   checkboxInput(ns("chk_includezeroy"), 
                                                 label_tooltip("Y - begin bij 0", "Start Y-as bij nul"),
-                                                value = FALSE)
+                                                value = make_default("includezeroy", FALSE))
                            )
                          )
                      
@@ -208,7 +242,7 @@ customplotcontrolsUI <- function(id){
                                       checkboxInput(ns("check_annotate_bars"), 
                                                     label_tooltip("Label totalen boven de bars", 
                                                                   "Voegt een label toe per bar met de totale waarde"),
-                                                    value = FALSE),
+                                                    value = make_default("annotate_bars", FALSE)),
                                       tags$hr()
                              )
                            ),
@@ -219,13 +253,18 @@ customplotcontrolsUI <- function(id){
                                        width = 300,
                                        choices = c("Geen" = "None", 
                                                    "Horizontale lijn" = "Horizontal line",
-                                                   "Verticale lijn" = "Vertical line")),
+                                                   "Verticale lijn" = "Vertical line"),
+                                       selected = make_default("annotation_type", "None")
+                                       ),
                            shinyjs::hidden(
                              tags$div(id = ns("abline_controls"),
                                       numericInput(ns("num_line_coordinate"), "X-as waarde:", 
-                                                   value = 0, width = 300),
+                                                   value = make_default("line_coordinate", 0), 
+                                                   width = 300),
                                       tags$div(style = "width: 200px;",
-                                               colourpicker::colourInput(ns("colour_annotation"), "Kleur", value = "red")
+                                               colourpicker::colourInput(ns("colour_annotation"), 
+                                                                         "Kleur", 
+                                                                         value = make_default("line_colour","red"))
                                       )
                              )
                            )
@@ -242,7 +281,8 @@ customplotcontrolsUI <- function(id){
                                 selectInput(ns("select_palette"), 
                                             "Palet",
                                             choices = color_palettes, 
-                                            selected = "rich.colors", width = 300)
+                                            selected = "rich.colors", 
+                                            width = 300)
                               ),
                               
                               tags$br(),
@@ -264,7 +304,7 @@ customplotcontrolsUI <- function(id){
                                 
                                 div(style="width: 110px; display: inline-block;", 
                                     colourpicker::colourInput(ns(paste0("sel_color",i)), as.character(i), 
-                                                value = gplots::rich.colors(12)[i])
+                                                value = if(is.null(args$palette))gplots::rich.colors(12)[i] else args$palette[i])
                                 )
                                 
                               }),

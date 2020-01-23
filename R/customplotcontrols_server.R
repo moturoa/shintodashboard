@@ -26,8 +26,6 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     names(current_dataset())
   })
   
-  ns <- session$ns
-  
   # observe({
   # 
   #   out <- load_dashboard("wbmdemo5")
@@ -459,166 +457,99 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     
     thisdash <- input$select_dashboard
     
-    out <- load_dashboard(thisdash)
+    dash <- load_dashboard(thisdash)
     
     for(i in seq_along(out)){
-      add_widget(plotarguments = out[[i]])
+      insert_widget(args = dash[[i]], datasets = datasets)
     }
     
   })
   
   
-  widget_ui <- function(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
-                        interactive, interactive_vals=NULL, data = NULL){
-    
-    inner_content <- list(
-      actionButton(ns(id_closebutton), 
-                   label=HTML("&times;"), class="plotbutton"),
-      actionButton(ns(id_editbutton), 
-                   label="", icon=icon("edit"), class="plotbutton"),
-      plotOutput(ns(id_plot), height = "280px")
-    )
-    
-    if(!(is.null(interactive) || interactive$nelements == 0)){
-      
-      make_interactive_element <- function(i){
-        
-        if(i > interactive$nelements)return(NULL)
-        
-        varlab <- paste0("variable",i)
-        ellab <- paste0("element",i)
-        label <- paste0("label",i)
-        value <- interactive_vals[[i]]
-        
-        column_data <- data[,interactive[[varlab]]]
-        
-        if(interactive[[ellab]] == "selectInput"){
-          el <- shinyWidgets::pickerInput(ns(id_interactive[i]), 
-                                          label = interactive[[label]],
-                                          choices = unique(column_data),
-                                          selected = if(is_empty(value)) unique(column_data) else value,
-                                          multiple = TRUE,
-                                          options = list(`actions-box` = TRUE,
-                                                         `selected-text-format` = "count > 3"),
-                                          width = "200px"
-          )
-        } else if(interactive[[ellab]] == "sliderInput"){
-          el <- shiny::sliderInput(ns(id_interactive[i]),
-                                   label = interactive[[label]],
-                                   min = min(column_data, na.rm=TRUE),
-                                   max = max(column_data, na.rm=TRUE),
-                                   value = if(is_empty(value))c(min(column_data, na.rm=TRUE), max(column_data, na.rm=TRUE)) else value,
-                                   width = "200px"
-          )
-        } else if(interactive[[ellab]] == "dateRangeInput") {
-          el <- shiny::dateRangeInput(ns(id_interactive[i]),
-                                      label = interactive[[label]],
-                                      min = min(column_data, na.rm=TRUE),
-                                      max = max(column_data, na.rm=TRUE),
-                                      start = if(is_empty(value))min(column_data, na.rm=TRUE) else value[1],
-                                      end = if(is_empty(value))max(column_data, na.rm=TRUE) else value[2],
-                                      width = "200px"
-          )
-        }
-        
-        
-        return(el)
-        
-      }
-      
-      inner_content <- c(inner_content, list(
-        side_by_side(
-          make_interactive_element(1),
-          tags$div(style="width:20px;"),
-          make_interactive_element(2),
-          vertical_align = TRUE
-        )
-      ))
-      
-      
-    }
-    
-    withTags(
-      div(id = id_container,  class = "customplot col-sm-6", 
-          div(class = "box cpbox", style = "height: 400px;",
-              tags$div(class = "box-body",
-                       inner_content
-              )
-          )
-      )
-    )
-  }
   
-  add_widget <- function(plotarguments = NULL){
-    
-    id_container <- ns(paste0("customplot", random_word(6)))
-    id_plot <- paste0(id_container, "_plot")
-    id_closebutton <- paste0(id_container,"_btn_close")
-    id_editbutton <- paste0(id_container,"_btn_edit")
-    id_interactive <- paste0(id_container, "_interactive_", 1:2)
-    
-    if(is.null(plotarguments)){
-      rv$plot_settings[[id_container]] <<- read_plot_settings()
-    } else {
-      rv$plot_settings[[id_container]] <<- plotarguments
-    }
-    
-    
-    
-    dataset <- datasets[[rv$plot_settings[[id_container]]$dataset]]
-    
-    insertUI(
-      "#placeholder", where = "beforeEnd",
-      
-      widget_ui(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
-                interactive = rv$plot_settings[[id_container]]$interactive,
-                interactive_vals = rv$plot_settings[[id_container]]$interactive_vals,
-                data = dataset)
-    )
-    
-    observe({
-      interactive_vals <- list(input[[id_interactive[1]]], 
-                               input[[id_interactive[2]]])
-      
-      rv$plot_settings[[id_container]]$interactive_vals <<- interactive_vals
-      
-    })
-    
-    
-    output[[id_plot]] <- renderPlot({
-      
-      interactive_vals <- list(input[[id_interactive[1]]], 
-                               input[[id_interactive[2]]])
-      
-      isolate(
-        custom_plot(plotarguments = rv$plot_settings[[id_container]],
-                    data = dataset,
-                    interactive = interactive_vals)
-      )
-      
-    })
-    
-    
-    observeEvent(input[[id_closebutton]], {
-      
-      rv$plot_settings[[id_container]] <<- NULL
-      removeUI(selector = paste0("#", id_container), session = session)
-      
-      
-    })
-    
-    
-    observeEvent(input[[id_editbutton]], {
-      
-      update_inputs(rv$plot_settings[[id_container]], session)
-      rv$current_id_container <- id_container
-      rv$current_id_plot <- id_plot
-      
-      shinyjs::show("btn_updateplot")
-      
-    })
-    
-  }
+  
+  #   
+  #   widget_ui <- function(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
+  #                         interactive, interactive_vals=NULL, data = NULL){
+  #     
+  #     
+  #     
+  #   }
+  #   
+  #   
+  # }
+  # 
+  # 
+  # add_widget <- function(plotarguments = NULL){
+  #   
+  #   id_container <- ns(paste0("customplot", random_word(6)))
+  #   id_plot <- paste0(id_container, "_plot")
+  #   id_closebutton <- paste0(id_container,"_btn_close")
+  #   id_editbutton <- paste0(id_container,"_btn_edit")
+  #   id_interactive <- paste0(id_container, "_interactive_", 1:2)
+  #   
+  #   if(is.null(plotarguments)){
+  #     rv$plot_settings[[id_container]] <<- read_plot_settings()
+  #   } else {
+  #     rv$plot_settings[[id_container]] <<- plotarguments
+  #   }
+  #   
+  #   
+  #   
+  #   dataset <- datasets[[rv$plot_settings[[id_container]]$dataset]]
+  #   
+  #   insertUI(
+  #     "#placeholder", where = "beforeEnd",
+  #     
+  #     widget_ui(id_container, id_plot, id_closebutton, id_editbutton, id_interactive,
+  #               interactive = rv$plot_settings[[id_container]]$interactive,
+  #               interactive_vals = rv$plot_settings[[id_container]]$interactive_vals,
+  #               data = dataset)
+  #   )
+  #   
+  #   observe({
+  #     interactive_vals <- list(input[[id_interactive[1]]], 
+  #                              input[[id_interactive[2]]])
+  #     
+  #     rv$plot_settings[[id_container]]$interactive_vals <<- interactive_vals
+  #     
+  #   })
+  #   
+  #   
+  #   output[[id_plot]] <- renderPlot({
+  #     
+  #     interactive_vals <- list(input[[id_interactive[1]]], 
+  #                              input[[id_interactive[2]]])
+  #     
+  #     isolate(
+  #       custom_plot(plotarguments = rv$plot_settings[[id_container]],
+  #                   data = dataset,
+  #                   interactive = interactive_vals)
+  #     )
+  #     
+  #   })
+  #   
+  #   
+  #   observeEvent(input[[id_closebutton]], {
+  #     
+  #     rv$plot_settings[[id_container]] <<- NULL
+  #     removeUI(selector = paste0("#", id_container), session = session)
+  #     
+  #     
+  #   })
+  #   
+  #   
+  #   observeEvent(input[[id_editbutton]], {
+  #     
+  #     update_inputs(rv$plot_settings[[id_container]], session)
+  #     rv$current_id_container <- id_container
+  #     rv$current_id_plot <- id_plot
+  #     
+  #     shinyjs::show("btn_updateplot")
+  #     
+  #   })
+  #   
+  # }
   
   # Button: plot maken
   observeEvent(input$btn_addplot, {
@@ -715,7 +646,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   
   
 
-  
+return(reactive(read_plot_settings()))
   
   
 }
