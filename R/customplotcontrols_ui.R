@@ -131,7 +131,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                      label = label_tooltip("Groep variabele", 
                                                            "Selecteer de kolom die de kleuren in de bar delen aangeeft."),
                                      width = 300,
-                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]),
+                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL,
                                      selected = make_default("groupvar", NULL))
                        )
                      )
@@ -143,6 +143,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                       tags$br(),
                       actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
                       tags$br(),
+
                       tags$div(id = ns("filter_placeholder"))
 
                 ),
@@ -159,10 +160,14 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                     inline = TRUE),
                        
                        shinyjs::hidden(
-                         interactive_panel(1, ns)
+                         interactive_panel(1, ns, 
+                                           columns = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                           args = args$interactive)
                        ),
                        shinyjs::hidden(
-                         interactive_panel(2, ns)
+                         interactive_panel(2, ns,
+                                           columns = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL,
+                                           args = args$interactive)
                        )
                      )
                        

@@ -25,22 +25,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   current_available_columns <- reactive({
     names(current_dataset())
   })
-  
-  # observe({
-  # 
-  #   out <- load_dashboard("wbmdemo5")
-  # 
-  #   for(i in seq_along(out)){
-  #     add_widget(plotarguments = out[[i]])
-  #   }
-  # 
-  # })
-  
-  # output$txt_debug <- renderPrint({
-  #   reactiveValuesToList(input)
-  # })
-  
-  
+
   observeEvent(current_available_columns(), {
     
     cols <- current_available_columns()
@@ -51,27 +36,23 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
                       choices = cols, selected = input$plot_yvar)
     updateSelectInput(session, "plot_groupvar", 
                       choices = cols, selected = input$plot_groupvar)  
-    updateSelectInput(session, "ia_select_variable1", 
-                      choices = cols)
-    updateSelectInput(session, "ia_select_variable2", 
-                      choices = cols)
     
   })
   
-  # Data filter toevoegen
-  observeEvent(input$btn_add_filter, {
-    
-    new_id <- uuid::UUIDgenerate()
-    
-    insertUI(paste0("#", session$ns("filter_placeholder")), 
-             "beforeEnd", 
-             columnFilterUI(session$ns(new_id), current_dataset())
-    )
-    
-    rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
-    
-    
-  })
+  # # Data filter toevoegen
+  # observeEvent(input$btn_add_filter, {
+  #   
+  #   new_id <- uuid::UUIDgenerate()
+  #   
+  #   insertUI(paste0("#", session$ns("filter_placeholder")), 
+  #            "beforeEnd", 
+  #            columnFilterUI(session$ns(new_id), current_dataset())
+  #   )
+  #   
+  #   rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
+  #   
+  #   
+  # })
   
   
   # Lokale functie om interactieve settings te lezen.
@@ -322,24 +303,24 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
       
       
     # Interactieve elementen
-    update_interactive_panel <- function(i, a, session){
-      if(!is.null(a$interactive[[glue("element{i}")]])){
-        shinyjs::show(glue("interactive_panel_{i}"))
-        shinyjs::show(glue("ia_select_input{i}"))
-        updateSelectInput(session, glue("ia_select_input{i}"), 
-                          selected = a$interactive[[glue("element{i}")]])
-        shinyjs::show(glue("ia_select_variable_box{i}"))
-        updateSelectInput(session, glue("ia_select_variable{i}"), 
-                          choices = current_columns, 
-                          selected = a$interactive[[glue("variable{i}")]])
-        updateTextInput(session, glue("ia_element_label{i}"), 
-                        value = a$interactive[[glue("label{i}")]])
-      }
-    }
-    
-    updateAwesomeRadio(session, "ia_select_nelements", selected = as.character(a$interactive$nelements))
-    update_interactive_panel(1, a, session)
-    update_interactive_panel(2, a, session)
+    # update_interactive_panel <- function(i, a, session){
+    #   if(!is.null(a$interactive[[glue("element{i}")]])){
+    #     shinyjs::show(glue("interactive_panel_{i}"))
+    #     shinyjs::show(glue("ia_select_input{i}"))
+    #     updateSelectInput(session, glue("ia_select_input{i}"), 
+    #                       selected = a$interactive[[glue("element{i}")]])
+    #     shinyjs::show(glue("ia_select_variable_box{i}"))
+    #     updateSelectInput(session, glue("ia_select_variable{i}"), 
+    #                       choices = current_columns, 
+    #                       selected = a$interactive[[glue("variable{i}")]])
+    #     updateTextInput(session, glue("ia_element_label{i}"), 
+    #                     value = a$interactive[[glue("label{i}")]])
+    #   }
+    # }
+    # 
+    # updateAwesomeRadio(session, "ia_select_nelements", selected = as.character(a$interactive$nelements))
+    # update_interactive_panel(1, a, session)
+    # update_interactive_panel(2, a, session)
    
   }
   
@@ -434,6 +415,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   
   observeEvent(input$btn_save_dashboard, {
     
+    browser()
     save_dashboard(rv$plot_settings[input$customplotids], input$txt_dashboard_name)
     
     updateSelectInput(session, "select_dashboard", 

@@ -117,23 +117,10 @@ widget <- function(input, output, session, id_copy, args, datasets){
   })
   
   observeEvent(input$btn_edit, {
-    print(id_copy)
+    #print(id_copy)
     session$userData$plotedit(id_copy)
   })
 
-# 
-#   observeEvent(input$btn_edit, {
-# 
-#     # update_inputs(args, session)
-#     # 
-#     # shinyjs::show("btn_updateplot")
-# 
-#     .current <<- id_copysendcustom
-#     
-#     session$sendCustomMessage("selectedPlot", list(id = id_copy))
-#     
-#     
-#   })
 
 
 }

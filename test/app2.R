@@ -5,7 +5,7 @@ library(DT)
 library(shinyWidgets)
 library(glue)
 library(shinyjqui)
-
+library(shinyjs)
 library(shinydashboard)
 
 source("../R/functions.R")
@@ -64,7 +64,7 @@ server <- function(input, output, session) {
     customplotcontrolsUI("controls", args = w_edit(), data_key = datasets_key, datasets = datasets_content)
   })
   
-  for(i in seq_along(dash)){
+  for(i in 1){  #seq_along(dash)){
     new_id <- uuid::UUIDgenerate()
     insert_widget(new_id, dash[[i]], datasets_content)
     .settings[[new_id]] <- dash[[i]]

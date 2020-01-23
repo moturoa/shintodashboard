@@ -1,4 +1,8 @@
-interactive_panel <- function(i, ns, columns){
+interactive_panel <- function(i, ns, columns, args = NULL){
+  
+  element <- args[[paste0("element",i)]]
+  variable <- args[[paste0("variable",i)]]
+  label <- args[[paste0("label",i)]]
   
   tags$div(id = ns(glue("interactive_panel_{i}")),
            h4(glue("Interactief element {i}")),
@@ -8,14 +12,22 @@ interactive_panel <- function(i, ns, columns){
                        choices = list("Geen" = "",
                                       "Selecteer categorieen" = "selectInput",
                                       "Slider voor numerieke waarden" = "sliderInput",
-                                      "Datum reeks" = "dateRangeInput")),
+                                      "Datum reeks" = "dateRangeInput"),
+                       selected = element
+                       ),
            shinyjs::hidden(
              tags$div(id = ns(glue("ia_select_variable_box{i}")),
                       selectInput(ns(glue("ia_select_variable{i}")), 
                                   "Heeft effect op kolom",
                                   width = 300,
-                                  choices = NULL),
-                      textInput(ns(glue("ia_element_label{i}")), "Label")
+                                  choices = columns,
+                                  selected = variable,
+                                  multiple = FALSE
+                                  ),
+                      textInput(ns(glue("ia_element_label{i}")), 
+                                "Label",
+                                value = label
+                                )
              )
            )
   )
