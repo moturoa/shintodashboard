@@ -10,3 +10,20 @@ insert_widget <- function(id, args, datasets,
   callModule(widget, id, args = args, datasets = datasets, id_copy = id)
   
 }
+
+#' Loads all widgets from a JSON
+#'@export
+insert_saved_widgets <- function(dash, datasets, buttons = "", ...){
+  
+  if(is.character(dash))dash <- jsonlite::fromJSON(dash)
+
+  settings <- list()  
+  
+  for(i in seq_along(dash)){
+    new_id <- uuid::UUIDgenerate()
+    insert_widget(new_id, dash[[i]], datasets, buttons = buttons, ...)
+    settings[[new_id]] <- dash[[i]]
+  }
+  
+return(settings)
+}

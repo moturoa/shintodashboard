@@ -46,6 +46,62 @@ interactive_panel <- function(i, ns, columns, args = NULL){
   
 }
 
+
+datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
+
+  if(!is.null(args)){
+    
+    if(i > length(args)){
+      args <- NULL
+    } else {
+      args <- args[[i]]
+    }
+    
+  }
+  
+  if(!is.null(args)){
+    choices <- sort(unique(data[[args$column]]))
+  } else {
+    choices <- NULL
+  }
+  
+  tags$div(id = ns(glue("datafilter_panel_{i}")),
+           
+           h4(glue("Filter {i}")),
+           
+           side_by_side(vertical_align = TRUE,
+             selectInput(ns(glue("il_select_variable{i}")), 
+                         "Filter kolom",
+                         width = 300,
+                         choices = columns,
+                         selected = args$column,
+                         multiple = FALSE
+             ),
+             shinyWidgets::pickerInput(ns(glue("il_select_values{i}")), 
+                                       "Selecteer",
+                                       width = 300,
+                                       choices = choices,
+                                       selected = args$value,
+                                       multiple = TRUE,
+                                       options = list(`actions-box` = TRUE,
+                                                      `deselect-all-text` = "Alles uit",
+                                                      `dropdown-align-right` = TRUE,
+                                                      `selected-text-format` = "count > 3",
+                                                      `none-selected-text` = "Geen selectie",
+                                                      `select-all-text` = "Alles aan",
+                                                      `none-results-text` = "Geen selectie",
+                                                      `count-selected-text` = ">3 Geselecteerd",
+                                                      `dropup-auto` = TRUE
+                                       )
+             )
+           )
+           
+  )
+  
+  
+  
+}
+
 fleetingMessage <- function(msg, status = c("info","success","danger","warning"), 
                             selector = getOption("fleetingmessage_location", "#msgplaceholder"), 
                             id = NULL, 

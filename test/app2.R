@@ -61,22 +61,20 @@ server <- function(input, output, session) {
   observeEvent(input$browse, browser())
   
   w_edit <- reactiveVal()
+  args <- reactiveVal()
   
   output$ui_controls <- renderUI({
     input$reset_settings
     customplotcontrolsUI("controls", args = w_edit(), data_key = datasets_key, datasets = datasets_content)
   })
   
-  for(i in 1:2){  #seq_along(dash)){
-    new_id <- uuid::UUIDgenerate()
-    insert_widget(new_id, dash[[i]], datasets_content, buttons = c("close","edit"))
-    .settings[[new_id]] <- dash[[i]]
-  }
+  .settings <<- insert_saved_widgets(dash[1:2], datasets_content, buttons = c("edit","close"))
   
   observeEvent(input$make_plot, {
     
     req(out())
     new_id <- uuid::UUIDgenerate()
+    
     insert_widget(new_id, out(), datasets_content, where = "afterBegin")
     .settings[[new_id]] <- out()
   })
@@ -85,15 +83,14 @@ server <- function(input, output, session) {
     session$userData$plotedit()
   })
   
-  args <- reactiveVal()
-  
   observe({
     
     edited <- session$userData$plotedit()
     req(edited)
+    
     args(.settings[[edited]])
     w_edit(args())
-    print("edited")
+    
   })
   
   

@@ -7,6 +7,13 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
   color_palettes <- c(tools::file_path_sans_ext(dir("cache/palettes", pattern = "[.]json$")), 
                       "rich.colors", rownames(brewer.pal.info))
   
+  if(!is.null(args)){
+    dataset <- datasets[[args$dataset]]  
+  } else {
+    dataset <- NULL
+  }
+  
+  
   make_default <- function(x, default = ""){
     val <- args[[x]]
     if(is.null(val) || is.na(val)){
@@ -86,7 +93,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                          selectInput(ns("plot_xvar"), 
                                      label = label_tooltip("X Variabele", 
                                                            "Selecteer variabele die langs de X-as wordt geplot"),
-                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                     choices = if(!is.null(args$dataset))names(dataset) else NULL, 
                                      selected = make_default("xvar", NULL),
                                      width = 300),
                          checkboxInput(ns("chk_factor_x"), 
@@ -101,7 +108,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                   selectInput(ns("plot_yvar"), 
                                               label = label_tooltip("Y Variabele", 
                                                                     "Selecteer variabele die langs de Y-as wordt geplot"),
-                                              choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                              choices = if(!is.null(args$dataset))names(dataset) else NULL, 
                                               selected = make_default("yvar", NULL),
                                               width = 300),
                                   checkboxInput(ns("chk_factor_y"), 
@@ -131,7 +138,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                      label = label_tooltip("Groep variabele", 
                                                            "Selecteer de kolom die de kleuren in de bar delen aangeeft."),
                                      width = 300,
-                                     choices = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL,
+                                     choices = if(!is.null(args$dataset))names(dataset) else NULL,
                                      selected = make_default("groupvar", NULL))
                        )
                      )
@@ -140,13 +147,28 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                 
                 tabPanel("3. Filter", value = "filter",
 
-                      tags$br(),
-                      actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
-                      tags$br(),
-                      lapply(names(args$filters), function(x){
-                        columnFilterUI(ns(x), datasets[[args$dataset]], preset = args$filters[[x]])
-                      }),
-                      tags$div(id = ns("filter_placeholder"))
+                         tagList(
+                           tags$p("Selecteer het aantal data filters."),
+                           tags$p("Deze filters worden eenmalig op de data toegepast, en zijn niet interactief."),
+                           awesomeRadio(ns("il_select_nelements"),
+                                        "Aantal data filters",
+                                        choices = c("0","1","2"),
+                                        selected = if(!is.null(args$filters))as.character(length(args$filters)) else "0",
+                                        inline = TRUE),
+                           
+                           shinyjs::hidden(
+                             datafilter_panel(1, ns, 
+                                              columns = if(!is.null(args$dataset))names(dataset) else NULL, 
+                                              data = dataset,
+                                              args = args$filters)
+                           ),
+                           shinyjs::hidden(
+                             datafilter_panel(2, ns,
+                                              columns = if(!is.null(args$dataset))names(dataset) else NULL,
+                                              data = dataset,
+                                              args = args$filters)
+                           )
+                         )
 
                 ),
                 
@@ -163,12 +185,12 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                        
                        shinyjs::hidden(
                          interactive_panel(1, ns, 
-                                           columns = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL, 
+                                           columns = if(!is.null(args$dataset))names(dataset) else NULL, 
                                            args = args$interactive)
                        ),
                        shinyjs::hidden(
                          interactive_panel(2, ns,
-                                           columns = if(!is.null(args$dataset))names(datasets[[args$dataset]]) else NULL,
+                                           columns = if(!is.null(args$dataset))names(dataset) else NULL,
                                            args = args$interactive)
                        )
                      )
@@ -329,43 +351,26 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                        )
                      )
                       
-                ),
- 
-                tabPanel(tagList(icon("play"), "Voltooien"), value = "voltooien",
-                         
-                     tags$p("Maak de plot aan volgens de huidige instellingen.",
-                            "De plot wordt op het dashboard geplaatst."),
-                     tags$br(),
-                     actionButton(ns("btn_addplot"), 
-                                  label_tooltip("Plot maken","Voeg huidige plot toe aan dashboard."), 
-                                  class = "btn btn-primary", 
-                                  icon = icon("plus", lib = "glyphicon")),
-                     shinyjs::hidden(
-                       actionButton(ns("btn_updateplot"), 
-                                    label_tooltip("Plot updaten", "Geselecteerde plot updaten."), 
-                                    class = "btn btn-primary", 
-                                    icon = icon("refresh", lib = "glyphicon"))
-                     )
-                ),
-                
-                tabPanel(tagList(icon("table"), "Dashboard"), value = "dashboard",
-                         
-                   tagList(
-                     tags$p("Huidig dashboard opslaan, of een dashboard uit de database laden."),
-                     textInput(ns("txt_dashboard_name"), "Dashboard opslaan", 
-                               value = glue("dashboard_{sample(1:10^4,1)}")),
-                     actionButton(ns("btn_save_dashboard"), 
-                                  "Opslaan", icon=icon("save"), class="btn btn-info",
-                                  onclick = "customplotorder();"),
-                     tags$hr(),
-                     selectInput(ns("select_dashboard"), "Dashboard laden",
-                                 choices = list_dashboards()),
-                     actionButton(ns("btn_load_dashboard"), "", 
-                                  class="btn btn-info", 
-                                  icon = icon("folder-open"))
-                   )
-                         
                 )
+ 
+                # tabPanel(tagList(icon("play"), "Voltooien"), value = "voltooien",
+                #          
+                #      tags$p("Maak de plot aan volgens de huidige instellingen.",
+                #             "De plot wordt op het dashboard geplaatst."),
+                #      tags$br(),
+                #      actionButton(ns("btn_addplot"), 
+                #                   label_tooltip("Plot maken","Voeg huidige plot toe aan dashboard."), 
+                #                   class = "btn btn-primary", 
+                #                   icon = icon("plus", lib = "glyphicon")),
+                #      shinyjs::hidden(
+                #        actionButton(ns("btn_updateplot"), 
+                #                     label_tooltip("Plot updaten", "Geselecteerde plot updaten."), 
+                #                     class = "btn btn-primary", 
+                #                     icon = icon("refresh", lib = "glyphicon"))
+                #      )
+                # ),
+                
+                
                 
               )
               

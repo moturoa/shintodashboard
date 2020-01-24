@@ -15,8 +15,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   # Update keuze menu.
   updateSelectInput(session, "select_dataset", 
                     choices = data_key,
-                    selected = args$dataset
-                    )
+                    selected = args$dataset)
   
   # Lees geselecteerde dataset
   current_dataset <- reactive({
@@ -34,48 +33,84 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     cols <- current_available_columns()
     
     updateSelectInput(session, "plot_xvar", 
-                      choices = cols, selected = input$plot_xvar)
+                      choices = cols, selected = args$xvar)
     updateSelectInput(session, "plot_yvar", 
-                      choices = cols, selected = input$plot_yvar)
+                      choices = cols, selected = args$yvar)
     updateSelectInput(session, "plot_groupvar", 
-                      choices = cols, selected = input$plot_groupvar)  
+                      choices = cols, selected = args$groupvar)  
     
+    
+    
+    updateSelectInput(session, "ia_select_variable1",
+                      choices = cols)
+    updateSelectInput(session, "ia_select_variable2",
+                      choices = cols)
+    
+    updateSelectInput(session, "il_select_variable1",
+                      choices = cols)
+    updateSelectInput(session, "il_select_variable2",
+                      choices = cols)
+    
+    
+  })
+  
+  
+  observe({
+
+    sel <- input$il_select_variable1
+    req(sel)
+    dat <- current_dataset()[[sel]]
+    updatePickerInput(session, "il_select_values1",
+                      choices = sort(unique(dat)),
+                      selected = sort(unique(dat)))
+
+  })
+
+  observe({
+
+    sel <- input$il_select_variable2
+    req(sel)
+    dat <- current_dataset()[[sel]]
+    updatePickerInput(session, "il_select_values2",
+                      choices = sort(unique(dat)),
+                      selected = sort(unique(dat)))
+
   })
   
   # Data filter toevoegen
-  observeEvent(input$btn_add_filter, {
-
-    new_id <- uuid::UUIDgenerate()
-
-    insertUI(paste0("#", session$ns("filter_placeholder")),
-             "beforeEnd",
-             columnFilterUI(session$ns(new_id), current_dataset())
-    )
-
-    rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
-
-
-  })
+  # observeEvent(input$btn_add_filter, {
+  # 
+  #   new_id <- uuid::UUIDgenerate()
+  # 
+  #   insertUI(paste0("#", session$ns("filter_placeholder")),
+  #            "beforeEnd",
+  #            columnFilterUI(session$ns(new_id), current_dataset())
+  #   )
+  # 
+  #   rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
+  # 
+  # 
+  # })
   
-  if(!is.null(args)){
-    
-    
-    if(length(args$filters) > 0){
-      
-      for(i in seq_along(args$filters)){
-        id <- names(args$filters)[i]
-        insertUI(paste0("#", session$ns("filter_placeholder")),
-                 "beforeEnd",
-                 columnFilterUI(session$ns(id), current_dataset())
-        )
-        
-        rv$filter_settings[[id]] <- callModule(columnFilter, id, datasets[[args$dataset]])  
-      }
-
-    }
-    
-    
-  }
+  # if(!is.null(args)){
+  #   
+  #   
+  #   if(length(args$filters) > 0){
+  #     
+  #     for(i in seq_along(args$filters)){
+  #       id <- names(args$filters)[i]
+  #       insertUI(paste0("#", session$ns("filter_placeholder")),
+  #                "beforeEnd",
+  #                columnFilterUI(session$ns(id), current_dataset())
+  #       )
+  #       
+  #       rv$filter_settings[[id]] <- callModule(columnFilter, id, datasets[[args$dataset]])  
+  #     }
+  # 
+  #   }
+  #   
+  #   
+  # }
   
   # Lokale functie om interactieve settings te lezen.
   read_interactive_controls <- function(){
@@ -102,6 +137,45 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     }
     
   }
+  
+  # vreeeeeeselijke code
+  read_datafilters <- function(){
+    
+    
+    if(input$il_select_nelements == "0"){
+      
+      list()
+      
+    } else if (input$il_select_nelements == "1"){
+      
+      list(
+        list(
+          class = "character",
+          column = input$il_select_variable1,
+          value = input$il_select_values1
+        )  
+      )
+      
+    } else if(input$il_select_nelements == "2"){
+      
+      list(
+        list(
+          class = "character",
+          column = input$il_select_variable1,
+          value = input$il_select_values1
+        ),
+        list(
+          class = "character",
+          column = input$il_select_variable2,
+          value = input$il_select_values2
+        )
+      )
+      
+    }
+    
+    
+  }
+  
   
   # Lokale functie om kleuren palette te lezen.
   read_palette <- function(){
@@ -169,33 +243,33 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     )
     
   )
-  
-  update_plot_main <- function(a, session){
-    
-    updateSelectInput(session, "select_dataset", selected = a$dataset)
-    
-    # Make sure to load data first; reactive current_dataset() has not updated yet.
-    current_columns <- names(datasets[[a$dataset]])
-    
-    updateSelectInput(session, "plot_type", selected = a$plottype)
-    updateAwesomeRadio(session,  "bar_position", selected = a$bar_position)
-    updateSelectInput(session, "plot_stat", selected = a$statfun)
-    
-    updateCheckboxInput(session, "pienarm", value = as.logical(a$pienarm))
-    updateSelectInput(session, "pietype", selected = a$pietype)
-    
-    updateSelectInput(session, "plot_xvar", choices = current_columns, selected = a$xvar)
-    updateSelectInput(session, "plot_yvar", choices = current_columns, selected = a$yvar)
-    updateCheckboxInput(session, "chk_factor_x", value = as.logical(a$factor_x))
-    updateCheckboxInput(session, "chk_factor_y", value = as.logical(a$factor_y))
-    
-    updateCheckboxInput(session, "chk_usegroup", value = as.logical(a$usegroup))
-    updateSelectInput(session, "plot_groupvar", choices = current_columns, selected = a$groupvar)
-    
-    if(a$groupvar == ""){
-      updateCheckboxInput(session, "chk_usegroup",value = FALSE)
-    }
-  }
+  # 
+  # update_plot_main <- function(a, session){
+  #   
+  #   updateSelectInput(session, "select_dataset", selected = a$dataset)
+  #   
+  #   # Make sure to load data first; reactive current_dataset() has not updated yet.
+  #   current_columns <- names(datasets[[a$dataset]])
+  #   
+  #   updateSelectInput(session, "plot_type", selected = a$plottype)
+  #   updateAwesomeRadio(session,  "bar_position", selected = a$bar_position)
+  #   updateSelectInput(session, "plot_stat", selected = a$statfun)
+  #   
+  #   updateCheckboxInput(session, "pienarm", value = as.logical(a$pienarm))
+  #   updateSelectInput(session, "pietype", selected = a$pietype)
+  #   
+  #   updateSelectInput(session, "plot_xvar", choices = current_columns, selected = a$xvar)
+  #   updateSelectInput(session, "plot_yvar", choices = current_columns, selected = a$yvar)
+  #   updateCheckboxInput(session, "chk_factor_x", value = as.logical(a$factor_x))
+  #   updateCheckboxInput(session, "chk_factor_y", value = as.logical(a$factor_y))
+  #   
+  #   updateCheckboxInput(session, "chk_usegroup", value = as.logical(a$usegroup))
+  #   updateSelectInput(session, "plot_groupvar", choices = current_columns, selected = a$groupvar)
+  #   
+  #   if(a$groupvar == ""){
+  #     updateCheckboxInput(session, "chk_usegroup",value = FALSE)
+  #   }
+  # }
   
   # Labels, titels, legenda, etc.
   settings_plot_labels <- reactive({
@@ -220,25 +294,25 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
   })
   
-  update_plot_labels <- function(a, session){
-    
-    updateTextInput(session, "plot_title", value = null_to_empty(a$title))
-    updateTextInput(session, "plot_subtitle", value = null_to_empty(a$subtitle))
-    updateTextInput(session, "plot_xlab", value = a$xlab)
-    updateTextInput(session, "plot_ylab", value = a$ylab)
-    updateTextInput(session, "plot_glab", value = a$glab)
-    
-    updateCheckboxInput(session, "chk_includezerox", value = as.logical(a$includezerox))
-    updateCheckboxInput(session, "chk_includezeroy", value = as.logical(a$includezeroy))
-    updateNumericInput(session, "num_labelsize", value = a$labelsize)
-    updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
-    
-    updateSelectInput(session, "sel_labelanglex", selected = a$labelanglex)
-    updateSelectInput(session, "sel_labelangley", selected = a$labelangley)
-    updateCheckboxInput(session, "chk_removelabelsx", value = as.logical(a$nolabelsx))
-    updateCheckboxInput(session, "chk_nolegend", value = as.logical(a$nolegend))
-    
-  }
+  # update_plot_labels <- function(a, session){
+  #   
+  #   updateTextInput(session, "plot_title", value = null_to_empty(a$title))
+  #   updateTextInput(session, "plot_subtitle", value = null_to_empty(a$subtitle))
+  #   updateTextInput(session, "plot_xlab", value = a$xlab)
+  #   updateTextInput(session, "plot_ylab", value = a$ylab)
+  #   updateTextInput(session, "plot_glab", value = a$glab)
+  #   
+  #   updateCheckboxInput(session, "chk_includezerox", value = as.logical(a$includezerox))
+  #   updateCheckboxInput(session, "chk_includezeroy", value = as.logical(a$includezeroy))
+  #   updateNumericInput(session, "num_labelsize", value = a$labelsize)
+  #   updateNumericInput(session, "num_labelmargin", value = a$labelmargin)
+  #   
+  #   updateSelectInput(session, "sel_labelanglex", selected = a$labelanglex)
+  #   updateSelectInput(session, "sel_labelangley", selected = a$labelangley)
+  #   updateCheckboxInput(session, "chk_removelabelsx", value = as.logical(a$nolabelsx))
+  #   updateCheckboxInput(session, "chk_nolegend", value = as.logical(a$nolegend))
+  #   
+  # }
   
   # Kleuren, symbool vorm, thema, etc.
   settings_plot_design <- reactive({
@@ -251,15 +325,15 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
   })        
   
-  update_plot_design <- function(a, session){
-    
-    # Panel 6 - Colors
-    for(i in 1:12){
-      colourpicker::updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
-    }
-    updateSelectInput(session, "scatter_shape", selected = a$shape)
-    
-  }
+  # update_plot_design <- function(a, session){
+  #   
+  #   # Panel 6 - Colors
+  #   for(i in 1:12){
+  #     colourpicker::updateColourInput(session, paste0("sel_color",i), value = a$palette[i])
+  #   }
+  #   updateSelectInput(session, "scatter_shape", selected = a$shape)
+  #   
+  # }
   
   # Annotatie : labels in bars, horizontale/verticale lijnen.
   settings_plot_annotation <- reactive({
@@ -273,56 +347,59 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
   })
   
-  update_plot_annotation <- function(a, session){
-    
-    updateCheckboxInput(session, "check_annotate_bars", value = as.logical(a$annotate_bars))
-    updateSelectInput(session, "select_annotation", selected = a$annotation_type)
-    updateNumericInput(session, "num_line_coordinate", value = a$line_coordinate)
-    colourpicker::updateColourInput(session, "colour_annotation", value = a$line_colour)
-    
-  }
+  # update_plot_annotation <- function(a, session){
+  #   
+  #   updateCheckboxInput(session, "check_annotate_bars", value = as.logical(a$annotate_bars))
+  #   updateSelectInput(session, "select_annotation", selected = a$annotation_type)
+  #   updateNumericInput(session, "num_line_coordinate", value = a$line_coordinate)
+  #   colourpicker::updateColourInput(session, "colour_annotation", value = a$line_colour)
+  #   
+  # }
   
   # Data filters, interactieve filters.
   settings_plot_dynamic <- reactive({
     
     list(
-      filters = lapply(rv$filter_settings, reactiveValuesToList),
+      filters = read_datafilters(), #lapply(rv$filter_settings, reactiveValuesToList),
       interactive = read_interactive_controls()
     )  
     
   })
   
-  update_plot_dynamic <- function(a, session){
-    
-    current_columns <- names(datasets[[a$dataset]])
-      
-    #---- Filters
-    insert_defined_filter <- function(preset){
-      
-      new_id <- uuid::UUIDgenerate()
-      
-      insertUI(paste0("#", session$ns("filter_placeholder")), 
-               "beforeEnd", 
-               columnFilterUI(session$ns(new_id), current_dataset(), preset = preset)
-      )
-      
-      rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset(),
-                                                 preset = preset)
-      
-    }
-    
-    # Oude filters weghalen
-    for(j in seq_along(rv$filter_settings)){
-      id <- session$ns(names(rv$filter_settings)[j])
-      removeUI(paste0("#",id))
-    }
-    rv$filter_settings <- NULL
-    
-    # Opgeslagen filters erin plakken.
-    for(obj in a$filters){
-      insert_defined_filter(obj)
-    }
-      
+  #Interactieve elementen
+
+  
+  # update_plot_dynamic <- function(a, session){
+  #   
+  #   current_columns <- names(datasets[[a$dataset]])
+  #     
+  #   #---- Filters
+  #   insert_defined_filter <- function(preset){
+  #     
+  #     new_id <- uuid::UUIDgenerate()
+  #     
+  #     insertUI(paste0("#", session$ns("filter_placeholder")), 
+  #              "beforeEnd", 
+  #              columnFilterUI(session$ns(new_id), current_dataset(), preset = preset)
+  #     )
+  #     
+  #     rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset(),
+  #                                                preset = preset)
+  #     
+  #   }
+  #   
+  #   # Oude filters weghalen
+  #   for(j in seq_along(rv$filter_settings)){
+  #     id <- session$ns(names(rv$filter_settings)[j])
+  #     removeUI(paste0("#",id))
+  #   }
+  #   rv$filter_settings <- NULL
+  #   
+  #   # Opgeslagen filters erin plakken.
+  #   for(obj in a$filters){
+  #     insert_defined_filter(obj)
+  #   }
+  #     
       
     # Interactieve elementen
     # update_interactive_panel <- function(i, a, session){
@@ -344,7 +421,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     # update_interactive_panel(1, a, session)
     # update_interactive_panel(2, a, session)
    
-  }
+  #}
   
   # Lees alle settings in 1 list.
   read_plot_settings <- function(){
@@ -360,15 +437,15 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   }
   
   # Update alle settings: lees uit een list, zet alle waarden in hun plek.
-  update_inputs <- function(a, session){
-    
-    update_plot_main(a, session)
-    update_plot_labels(a, session)
-    update_plot_design(a, session)
-    update_plot_annotation(a, session)
-    update_plot_dynamic(a, session)
-    
-  }
+  # update_inputs <- function(a, session){
+  #   
+  #   update_plot_main(a, session)
+  #   update_plot_labels(a, session)
+  #   update_plot_design(a, session)
+  #   update_plot_annotation(a, session)
+  #   update_plot_dynamic(a, session)
+  #   
+  # }
   
   observeEvent(input$plot_type, {
     
@@ -579,30 +656,30 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
   })
   
-  # Button: update plot
-  observeEvent(input$btn_updateplot, {
-    
-    args <- read_plot_settings()
-    rv$plot_settings[[rv$current_id_container]] <<- args
-    
-    # ids of the interactive elements on the current container, if any
-    id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)
-    
-    output[[rv$current_id_plot]] <- renderPlot({
-      
-      # settings of those interactive elements
-      interactive_vals <- list(input[[id_interactive[1]]], 
-                               input[[id_interactive[2]]])
-      
-      isolate(
-        custom_plot(plotarguments = args, 
-                    data = datasets[[args$dataset]],
-                    interactive = interactive_vals)
-      )
-      
-    }, height = 280)
-    
-  })
+  # # Button: update plot
+  # observeEvent(input$btn_updateplot, {
+  #   
+  #   args <- read_plot_settings()
+  #   rv$plot_settings[[rv$current_id_container]] <<- args
+  #   
+  #   # ids of the interactive elements on the current container, if any
+  #   id_interactive <- paste0(rv$current_id_container, "_interactive_", 1:2)
+  #   
+  #   output[[rv$current_id_plot]] <- renderPlot({
+  #     
+  #     # settings of those interactive elements
+  #     interactive_vals <- list(input[[id_interactive[1]]], 
+  #                              input[[id_interactive[2]]])
+  #     
+  #     isolate(
+  #       custom_plot(plotarguments = args, 
+  #                   data = datasets[[args$dataset]],
+  #                   interactive = interactive_vals)
+  #     )
+  #     
+  #   }, height = 280)
+  #   
+  # })
   
   
   # Interactieve elementen
@@ -639,6 +716,15 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   })
   
   
+  observe({
+    
+    nel <- as.numeric(input$il_select_nelements)
+    req(nel)
+    
+    shinyjs::toggle("datafilter_panel_1", condition = nel > 0)
+    shinyjs::toggle("datafilter_panel_2", condition = nel > 1)
+    
+  })
 
 return(reactive(read_plot_settings()))
   
