@@ -76,6 +76,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
     
   }
+  
   # Lokale functie om interactieve settings te lezen.
   read_interactive_controls <- function(){
     
@@ -610,18 +611,8 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     nel <- as.numeric(input$ia_select_nelements)
     req(nel)
     
-    if(nel == 0){
-      shinyjs::hide("interactive_panel_1")
-      shinyjs::hide("interactive_panel_2")
-    }
-    if(nel == 1){
-      shinyjs::show("interactive_panel_1")
-      shinyjs::hide("interactive_panel_2")
-    }
-    if(nel == 2){
-      shinyjs::show("interactive_panel_1")
-      shinyjs::show("interactive_panel_2")
-    }
+    shinyjs::toggle("interactive_panel_1", condition = nel > 0)
+    shinyjs::toggle("interactive_panel_2", condition = nel > 1)
     
   })
   

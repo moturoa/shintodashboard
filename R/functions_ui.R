@@ -5,32 +5,44 @@ interactive_panel <- function(i, ns, columns, args = NULL){
   label <- args[[paste0("label",i)]]
   
   tags$div(id = ns(glue("interactive_panel_{i}")),
+           
            h4(glue("Interactief element {i}")),
-           selectInput(ns(glue("ia_select_input{i}")), 
-                       "Soort input",
-                       width = 300,
-                       choices = list("Geen" = "",
-                                      "Selecteer categorieen" = "selectInput",
-                                      "Slider voor numerieke waarden" = "sliderInput",
-                                      "Datum reeks" = "dateRangeInput"),
-                       selected = element
-                       ),
-           shinyjs::hidden(
-             tags$div(id = ns(glue("ia_select_variable_box{i}")),
-                      selectInput(ns(glue("ia_select_variable{i}")), 
-                                  "Heeft effect op kolom",
-                                  width = 300,
-                                  choices = columns,
-                                  selected = variable,
-                                  multiple = FALSE
-                                  ),
-                      textInput(ns(glue("ia_element_label{i}")), 
-                                "Label",
-                                value = label
-                                )
+           
+           tags$div(style = "display: inline-block;",
+             selectInput(ns(glue("ia_select_input{i}")), 
+                         "Soort input",
+                         width = 250,
+                         choices = list("Geen" = "",
+                                        "Selecteer categorieen" = "selectInput",
+                                        "Slider voor numerieke waarden" = "sliderInput",
+                                        "Datum reeks" = "dateRangeInput"),
+                         selected = element
              )
+           ),
+           shinyjs::hidden(
+               tags$div(id = ns(glue("ia_select_variable_box{i}")), style = "display: inline-block;",
+                        
+                        tags$div(style = "display: inline-block;",
+                          selectInput(ns(glue("ia_select_variable{i}")), 
+                                      "Heeft effect op kolom",
+                                      width = 300,
+                                      choices = columns,
+                                      selected = variable,
+                                      multiple = FALSE
+                          )
+                        ),
+                        tags$div(style = "display: inline-block; vertical-align: top;",
+                          textInput(ns(glue("ia_element_label{i}")), 
+                                    "Label",
+                                    value = label
+                          )  
+                        )
+               )
            )
-  )
+             
+           )
+           
+           
   
 }
 
