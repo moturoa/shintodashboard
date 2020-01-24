@@ -143,7 +143,9 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                       tags$br(),
                       actionButton(ns("btn_add_filter"), "Filter", icon = icon("plus")),
                       tags$br(),
-
+                      lapply(names(args$filters), function(x){
+                        columnFilterUI(ns(x), datasets[[args$dataset]], preset = args$filters[[x]])
+                      }),
                       tags$div(id = ns("filter_placeholder"))
 
                 ),

@@ -1,6 +1,6 @@
 library(shiny)
 
-source("../R/module_widget.R")
+
 library(DT)
 library(shinyWidgets)
 library(glue)
@@ -8,12 +8,15 @@ library(shinyjqui)
 library(shinyjs)
 library(shinydashboard)
 
-source("../R/functions.R")
-source("../R/functions_ui.R")
+fns <- dir("../R", full.names=TRUE)
+for(z in fns)source(z)
 
+library(RColorBrewer)
+library(shintoplotwrappers)
+library(ggplot2)
+library(ggthemes)
 
 .settings <- list()
-.current <- ""
 
 
 # Datasets
@@ -64,9 +67,9 @@ server <- function(input, output, session) {
     customplotcontrolsUI("controls", args = w_edit(), data_key = datasets_key, datasets = datasets_content)
   })
   
-  for(i in 1){  #seq_along(dash)){
+  for(i in 1:2){  #seq_along(dash)){
     new_id <- uuid::UUIDgenerate()
-    insert_widget(new_id, dash[[i]], datasets_content)
+    insert_widget(new_id, dash[[i]], datasets_content, buttons = c("close","edit"))
     .settings[[new_id]] <- dash[[i]]
   }
   
@@ -82,20 +85,34 @@ server <- function(input, output, session) {
     session$userData$plotedit()
   })
   
+  args <- reactiveVal()
+  
   observe({
     
     edited <- session$userData$plotedit()
     req(edited)
-    args <- .settings[[edited]]
-    w_edit(args)
+    args(.settings[[edited]])
+    w_edit(args())
+    print("edited")
   })
   
   
-  
-  # Read current plot settings
   out <- callModule(customplotcontrols, 
                     "controls", 
-                    data_key = datasets_key, datasets = datasets_content)
+                    data_key = datasets_key, 
+                    datasets = datasets_content)
+  
+  # Read current plot settings
+  observeEvent(args(), {
+    
+    print("calling")
+    out <- callModule(customplotcontrols, 
+                      "controls", 
+                      data_key = datasets_key, 
+                      datasets = datasets_content,
+                      args = args())  
+  })
+  
   
   
 }

@@ -1,6 +1,6 @@
 #' Shinto dashboard maker, server function
 #' @export
-customplotcontrols <- function(input, output, session, data_key, datasets){
+customplotcontrols <- function(input, output, session, data_key, datasets, args = NULL){
   
   rv <- reactiveValues(
     all_ids = NULL,
@@ -13,7 +13,10 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
   # Datasets
   
   # Update keuze menu.
-  updateSelectInput(session, "select_dataset", choices = data_key)
+  updateSelectInput(session, "select_dataset", 
+                    choices = data_key,
+                    selected = args$dataset
+                    )
   
   # Lees geselecteerde dataset
   current_dataset <- reactive({
@@ -39,22 +42,40 @@ customplotcontrols <- function(input, output, session, data_key, datasets){
     
   })
   
-  # # Data filter toevoegen
-  # observeEvent(input$btn_add_filter, {
-  #   
-  #   new_id <- uuid::UUIDgenerate()
-  #   
-  #   insertUI(paste0("#", session$ns("filter_placeholder")), 
-  #            "beforeEnd", 
-  #            columnFilterUI(session$ns(new_id), current_dataset())
-  #   )
-  #   
-  #   rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
-  #   
-  #   
-  # })
+  # Data filter toevoegen
+  observeEvent(input$btn_add_filter, {
+
+    new_id <- uuid::UUIDgenerate()
+
+    insertUI(paste0("#", session$ns("filter_placeholder")),
+             "beforeEnd",
+             columnFilterUI(session$ns(new_id), current_dataset())
+    )
+
+    rv$filter_settings[[new_id]] <- callModule(columnFilter, new_id, current_dataset())
+
+
+  })
   
-  
+  if(!is.null(args)){
+    
+    
+    if(length(args$filters) > 0){
+      
+      for(i in seq_along(args$filters)){
+        id <- names(args$filters)[i]
+        insertUI(paste0("#", session$ns("filter_placeholder")),
+                 "beforeEnd",
+                 columnFilterUI(session$ns(id), current_dataset())
+        )
+        
+        rv$filter_settings[[id]] <- callModule(columnFilter, id, datasets[[args$dataset]])  
+      }
+
+    }
+    
+    
+  }
   # Lokale functie om interactieve settings te lezen.
   read_interactive_controls <- function(){
     

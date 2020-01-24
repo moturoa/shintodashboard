@@ -4,7 +4,7 @@
 \alias{customplotcontrols}
 \title{Shinto dashboard maker, server function}
 \usage{
-customplotcontrols(input, output, session, data_key, datasets)
+customplotcontrols(input, output, session, data_key, datasets, args = NULL)
 }
 \description{
 Shinto dashboard maker, server function

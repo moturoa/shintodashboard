@@ -1,5 +1,5 @@
 
-widgetUI <- function(id, args, datasets){
+widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
   
   ns <- NS(id)
   
@@ -7,12 +7,16 @@ widgetUI <- function(id, args, datasets){
   
   # Twee knopjes, 1 plotOutput.
   inner_content <- list(
-    actionButton(ns("btn_close"), 
-                 label = HTML("&times;"), class = "plotbutton"),
-    actionButton(ns("btn_edit"), 
-                 label = "", icon = icon("edit"), 
-                 class = "plotbutton"
-                 ),
+    if("close" %in% buttons){
+      actionButton(ns("btn_close"), 
+                 label = HTML("&times;"), class = "plotbutton")
+    },
+    if("edit" %in% buttons){
+      actionButton(ns("btn_edit"), 
+                   label = "", icon = icon("edit"), 
+                   class = "plotbutton"
+      )  
+    },
     plotOutput(ns("widget_plot"), height = "280px")
   )
   

@@ -9,7 +9,8 @@ insert_widget(
   args,
   datasets,
   selector = "#placeholder",
-  where = "beforeEnd"
+  where = "beforeEnd",
+  buttons = c("close", "edit")
 )
 }
 \description{
