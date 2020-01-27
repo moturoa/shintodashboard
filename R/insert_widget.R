@@ -2,10 +2,19 @@
 #' @description Wrapper around insertUI(widgetUI(...)) and callModule(widget, ...).
 #'@export
 insert_widget <- function(id, args, datasets, 
-                          selector = "#placeholder", where = "beforeEnd",
-                          buttons = c("close","edit")){
-  insertUI(selector, where = where, 
-           ui = widgetUI(id, args = args, datasets = datasets, buttons = buttons))
+                          selector = "#placeholder", 
+                          where = "beforeEnd",
+                          buttons = c("close","edit"),
+                          size = list(width = 500, height = 450, 
+                                      margin = 10, padding = 25, 
+                                      padding_bottom = 100)
+                          
+                          ){
+  
+  ui <- widgetUI(id, args = args, datasets = datasets, buttons = buttons,
+                 widget_size = size)
+  
+  insertUI(selector, where = where, ui = ui)
   
   callModule(widget, id, args = args, datasets = datasets, id_copy = id)
   

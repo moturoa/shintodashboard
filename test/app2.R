@@ -18,7 +18,6 @@ library(ggthemes)
 
 .settings <- list()
 
-
 # Datasets
 datasets_key <- c(
   "Originele tabel" = "zawa_plancapaciteit_origineel.rds",    
@@ -33,12 +32,39 @@ datasets_paths <- file.path("data", datasets_key)
 datasets_content <- lapply(datasets_paths, readRDS) %>% 
   setNames(datasets_key)
 
-dash <- jsonlite::fromJSON("cache/zawa_20200107.json")
+
+d <- datasets_content[["zaanstad_plancapaciteit_fasering.rds"]]
+d <- dplyr::filter(d, soortwoning != "werken")
+d$soortwoning <- factor(d$soortwoning, levels = c("koopklasse 5 (>350.000)",
+                                                  "koopklasse 4 (<285.000-350.000)",
+                                                  "koopklasse 3 (<215.000-285.000)",
+                                                  "koopklasse 2 (<185.000-215.000)",
+                                                  "koopklasse 1 (<185.000)",
+                                                  "koopklasse onbekend",
+                                                  "huurklasse 3 (>900)",
+                                                  "huurklasse 2 (<720-900)",
+                                                  "huurklasse 1 (<720)",
+                                                  "huurklasse 0 (<417)",
+                                                  "huur/koop onbekend"
+                                                  ))
+datasets_content[["zaanstad_plancapaciteit_fasering.rds"]] <- d
+
+#dash <- jsonlite::fromJSON("cache/zawa20200121_v3.json")
+
+dash <- readRDS("cache/dash.rds")
+
+
+widget_size <- list(width = 500, 
+                    height = 450, 
+                    margin = 10, 
+                    padding = 25, 
+                    padding_bottom = 100)
 
 
 ui <- fluidPage(
   useShinyjs(),
   includeCSS("www/style.css"),
+  includeScript("www/plotsdashboard.js"),
   
   uiOutput("ui_controls"),
   
@@ -46,12 +72,16 @@ ui <- fluidPage(
   actionButton("browse","browser()"),
   actionButton("reset_settings", "Reset", icon = icon("refresh")),
   actionButton("make_plot", "Maak plot", icon = icon("plus")),
+  actionButton("save_dash", "Save dashboard", icon = icon("save")),
   tags$hr(),
   textOutput("test"),
   tags$hr(),
   
   jqui_sortable(
-    tags$div(id = "placeholder")  
+    tagList(
+      tags$div(id = "placeholder")    
+    )
+    
   )
   
 )
@@ -68,7 +98,10 @@ server <- function(input, output, session) {
     customplotcontrolsUI("controls", args = w_edit(), data_key = datasets_key, datasets = datasets_content)
   })
   
-  .settings <<- insert_saved_widgets(dash[1:2], datasets_content, buttons = c("edit","close"))
+  .settings <<- insert_saved_widgets(dash, 
+                                     datasets_content, 
+                                     buttons = c("edit","close"),
+                                     size = widget_size)
   
   observeEvent(input$make_plot, {
     
@@ -76,12 +109,32 @@ server <- function(input, output, session) {
     new_id <- uuid::UUIDgenerate()
     
     insert_widget(new_id, out(), datasets_content, where = "afterBegin")
-    .settings[[new_id]] <- out()
+    .settings[[new_id]] <<- out()
   })
 
   output$test <- renderText({
     session$userData$plotedit()
   })
+  
+  
+
+  observeEvent(input$save_dash, {
+    
+    session$sendCustomMessage("plotsdashboard", list(shiny_id = session$ns("visibleplots") ))
+    
+  })
+  
+
+  observe({
+    
+    req(input$visibleplots)
+    ids <- gsub("-container","", input$visibleplots)
+    saveRDS(.settings[ids], glue("cache/dash.rds"))
+    
+    #{format(Sys.time(), '%Y-%m-%d-%H-%M')}
+    
+  })
+  
   
   observe({
     

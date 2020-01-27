@@ -514,7 +514,6 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   
   observeEvent(input$btn_save_dashboard, {
     
-    browser()
     save_dashboard(rv$plot_settings[input$customplotids], input$txt_dashboard_name)
     
     updateSelectInput(session, "select_dashboard", 

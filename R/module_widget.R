@@ -1,5 +1,8 @@
 
-widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
+widgetUI <- function(id, args, datasets, buttons = c("close","edit"), 
+                     widget_size = list(width = 500, height = 450, 
+                                        margin = 10, padding = 25, 
+                                        padding_bottom = 100)){
   
   ns <- NS(id)
   
@@ -17,10 +20,11 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
                    class = "plotbutton"
       )  
     },
-    plotOutput(ns("widget_plot"), height = "280px")
+    plotOutput(ns("widget_plot"), 
+               width = widget_size$width - widget_size$padding*2, 
+               height = widget_size$height - widget_size$padding - widget_size$padding_bottom)
   )
   
-  # 
   
   if(!(is.null(args$interactive) || args$interactive$nelements == 0)){
     
@@ -35,6 +39,7 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
       label <- paste0("label",i)
       value <- args$interactive_vals[[i]]
       
+    
       column_data <- dataset[, args$interactive[[varlab]]]
       
       if(args$interactive[[ellab]] == "selectInput"){
@@ -50,6 +55,7 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
       } else if(args$interactive[[ellab]] == "sliderInput"){
         el <- shiny::sliderInput(ns(paste0("interactive_", i)),
                                  label = args$interactive[[label]],
+                                 sep = "",
                                  min = min(column_data, na.rm=TRUE),
                                  max = max(column_data, na.rm=TRUE),
                                  value = if(is_empty(value))c(min(column_data, na.rm=TRUE), max(column_data, na.rm=TRUE)) else value,
@@ -72,7 +78,7 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
     inner_content <- c(inner_content, list(
       side_by_side(
         make_interactive_element(1),
-        tags$div(style="width:20px;"),
+        tags$div(style = "width:20px;"),
         make_interactive_element(2),
         vertical_align = TRUE
       )
@@ -81,13 +87,21 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit")){
   }
   
   out <- withTags(
-    div(id = ns("container"),  class = "customplot col-sm-4", 
-        div(class = "box cpbox", style = "height: 400px;",
-            tags$div(class = "box-body",
-                     inner_content
-            )
+    
+    div(id = ns("container"), class = "customplot cpbox", 
+        style = glue("width: {widget_size$width}px;",
+                     "height: {widget_size$height}px;",
+                     "margin: {widget_size$margin}px;",
+                     "vertical-align: top;",
+                     #"padding: {widget_size$padding}px {widget_size$padding}px {widget_size$padding_bottom}px {widget_size$padding}px;",
+                     "display: inline-block;"),
+        
+        div(class = "box-body", 
+            inner_content
         )
+        
     )
+    
   )
   
 return(out) 
