@@ -8,7 +8,6 @@ insert_widget <- function(id, args, datasets,
                           size = list(width = 500, height = 450, 
                                       margin = 10, padding = 25, 
                                       padding_bottom = 100)
-                          
                           ){
   
   ui <- widgetUI(id, args = args, 

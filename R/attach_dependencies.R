@@ -17,7 +17,7 @@ attachDependencies <- function(tag){
     htmltools::htmlDependency(
       "plotorder", version,
       src = c(href = "shintodashboard/plotorder"),
-      script = "plotorder.js"
+      script = "plotsdashboard.js"
     ),
     htmltools::htmlDependency(
       "fleetingMessage", version,

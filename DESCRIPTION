@@ -1,7 +1,7 @@
 Package: shintodashboard
 Type: Package
 Title: Dashboard Kwekerij
-Version: 0.3
+Version: 0.3-2
 Author: Remko Duursma
 Maintainer: Remko Duursma <remko@shintolabs.nl>
 Description: Een Shiny module om custom grafiekjes te maken voor een dashboard.
