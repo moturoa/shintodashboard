@@ -11,12 +11,18 @@ insert_widget <- function(id, args, datasets,
                           
                           ){
   
-  ui <- widgetUI(id, args = args, datasets = datasets, buttons = buttons,
+  ui <- widgetUI(id, args = args, 
+                 datasets = datasets, 
+                 buttons = buttons,
                  widget_size = size)
   
   insertUI(selector, where = where, ui = ui)
   
-  callModule(widget, id, args = args, datasets = datasets, id_copy = id)
+  callModule(widget, 
+             id, 
+             args = args, 
+             datasets = datasets, 
+             id_copy = id)
   
 }
 

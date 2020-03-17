@@ -6,7 +6,13 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
   
   ns <- NS(id)
   
-  dataset <- datasets[[args$dataset]]
+  # Find dataset based on saved setting, OR, if only one dataset provided, use it.
+  if(length(args$dataset) > 1){
+    dataset <- datasets[[args$dataset]]  
+  } else {
+    dataset <- datasets[[1]]
+  }
+  
   
   # Twee knopjes, 1 plotOutput.
   inner_content <- list(
@@ -114,12 +120,17 @@ widget <- function(input, output, session, id_copy, args, datasets){
   
   session$userData$plotedit <- reactiveVal()
   
-  dataset <- datasets[[args$dataset]]
+  # Find dataset based on saved setting, OR, if only one dataset provided, use it.
+  if(length(args$dataset) > 1){
+    dataset <- datasets[[args$dataset]]  
+  } else {
+    dataset <- datasets[[1]]
+  }
   
-  
+  # Set values for the interactive elements
   interactive_vals <- reactive(list(input$interactive_1, input$interactive_2))
 
-
+  # Render plot
   output$widget_plot <- renderPlot({
 
     custom_plot(plotarguments = args,
@@ -128,12 +139,15 @@ widget <- function(input, output, session, id_copy, args, datasets){
     
   })
 
+  
+  # Close button
   observeEvent(input$btn_close, {
 
     removeUI(selector = paste0("#", session$ns("container")), session = session)
 
   })
   
+  # Edit button
   observeEvent(input$btn_edit, {
     #print(id_copy)
     session$userData$plotedit(id_copy)
