@@ -45,7 +45,6 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
       label <- paste0("label",i)
       value <- args$interactive_vals[[i]]
       
-    
       column_data <- dataset[, args$interactive[[varlab]]]
       
       if(args$interactive[[ellab]] == "selectInput"){
@@ -118,8 +117,7 @@ return(out)
 widget <- function(input, output, session, id_copy, args, datasets){
   
   
-  session$userData$plotedit <- reactiveVal()
-  
+
   # Find dataset based on saved setting, OR, if only one dataset provided, use it.
   if(length(args$dataset) > 1){
     dataset <- datasets[[args$dataset]]  
@@ -149,11 +147,11 @@ widget <- function(input, output, session, id_copy, args, datasets){
   
   # Edit button
   observeEvent(input$btn_edit, {
-    #print(id_copy)
-    session$userData$plotedit(id_copy)
+    print(id_copy)
+    session$userData$plotedit$id <- id_copy
+    session$userData$plotedit$ping <- runif(1)
+
   })
-
-
 
 }
   

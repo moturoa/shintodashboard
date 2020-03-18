@@ -1,7 +1,9 @@
 #' Inserts a widget
 #' @description Wrapper around insertUI(widgetUI(...)) and callModule(widget, ...).
 #'@export
-insert_widget <- function(id, args, datasets, 
+insert_widget <- function(id, 
+                          args, 
+                          datasets, 
                           selector = "#placeholder", 
                           where = "beforeEnd",
                           buttons = c("close","edit"),
@@ -32,7 +34,7 @@ insert_saved_widgets <- function(dash, datasets, buttons = "", ...){
   if(is.character(dash))dash <- jsonlite::fromJSON(dash)
 
   settings <- list()  
-  
+
   for(i in seq_along(dash)){
     new_id <- uuid::UUIDgenerate()
     insert_widget(new_id, dash[[i]], datasets, buttons = buttons, ...)
