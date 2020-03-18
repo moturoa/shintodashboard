@@ -60,6 +60,7 @@ datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
   }
   
   if(!is.null(args)){
+
     choices <- sort(unique(data[[args$column]]))
   } else {
     choices <- NULL

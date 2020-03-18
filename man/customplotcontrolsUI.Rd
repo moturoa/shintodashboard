@@ -4,7 +4,7 @@
 \alias{customplotcontrolsUI}
 \title{Shinto dashboard maker, UI function}
 \usage{
-customplotcontrolsUI(id, args = NULL, data_key, datasets)
+customplotcontrolsUI(id, args = NULL, data_key = NULL, datasets)
 }
 \description{
 Shinto dashboard maker, UI function

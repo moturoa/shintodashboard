@@ -1,8 +1,14 @@
 #' Shinto dashboard maker, UI function
 #' @export
-customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
+customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
   
   ns <- NS(id)
+  
+  if(is.null(data_key)){
+    warning("data_key must be provided. Using mtcars data.")
+    data_key <- c("mtcars" = "mtcars")
+    datasets <- list(mtcars = mtcars)
+  }
   
   color_palettes <- c(tools::file_path_sans_ext(dir("cache/palettes", pattern = "[.]json$")), 
                       "rich.colors", rownames(brewer.pal.info))
@@ -10,7 +16,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
   if(!is.null(args)){
     dataset <- datasets[[args$dataset]]  
   } else {
-    dataset <- NULL
+    dataset <- datasets[[data_key[[1]]]]
   }
   
   
@@ -22,6 +28,8 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
       val
     }
   }
+  
+
   
   out <- fluidPage(
     fluidRow(
@@ -35,7 +43,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                                  "Selecteer een dataset."),
                                    width = 300,
                                    choices = data_key,
-                                   selected = make_default("dataset", NULL)
+                                   selected = make_default("dataset", data_key[[1]])
                                    ),
                        
                        
@@ -93,7 +101,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                          selectInput(ns("plot_xvar"), 
                                      label = label_tooltip("X Variabele", 
                                                            "Selecteer variabele die langs de X-as wordt geplot"),
-                                     choices = if(!is.null(args$dataset))names(dataset) else NULL, 
+                                     choices = names(dataset), 
                                      selected = make_default("xvar", NULL),
                                      width = 300),
                          checkboxInput(ns("chk_factor_x"), 
@@ -108,7 +116,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                   selectInput(ns("plot_yvar"), 
                                               label = label_tooltip("Y Variabele", 
                                                                     "Selecteer variabele die langs de Y-as wordt geplot"),
-                                              choices = if(!is.null(args$dataset))names(dataset) else NULL, 
+                                              choices = names(dataset), 
                                               selected = make_default("yvar", NULL),
                                               width = 300),
                                   checkboxInput(ns("chk_factor_y"), 
@@ -138,7 +146,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                                      label = label_tooltip("Groep variabele", 
                                                            "Selecteer de kolom die de kleuren in de bar delen aangeeft."),
                                      width = 300,
-                                     choices = if(!is.null(args$dataset))names(dataset) else NULL,
+                                     choices = names(dataset),
                                      selected = make_default("groupvar", NULL))
                        )
                      )
@@ -158,13 +166,13 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                            
                            shinyjs::hidden(
                              datafilter_panel(1, ns, 
-                                              columns = if(!is.null(args$dataset))names(dataset) else NULL, 
+                                              columns = names(dataset), 
                                               data = dataset,
                                               args = args$filters)
                            ),
                            shinyjs::hidden(
                              datafilter_panel(2, ns,
-                                              columns = if(!is.null(args$dataset))names(dataset) else NULL,
+                                              columns = names(dataset),
                                               data = dataset,
                                               args = args$filters)
                            )
@@ -185,12 +193,12 @@ customplotcontrolsUI <- function(id, args = NULL, data_key, datasets){
                        
                        shinyjs::hidden(
                          interactive_panel(1, ns, 
-                                           columns = if(!is.null(args$dataset))names(dataset) else NULL, 
+                                           columns = names(dataset), 
                                            args = args$interactive)
                        ),
                        shinyjs::hidden(
                          interactive_panel(2, ns,
-                                           columns = if(!is.null(args$dataset))names(dataset) else NULL,
+                                           columns = names(dataset),
                                            args = args$interactive)
                        )
                      )
