@@ -7,7 +7,7 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
   ns <- NS(id)
   
   # Find dataset based on saved setting, OR, if only one dataset provided, use it.
-  if(length(args$dataset) > 1){
+  if(length(datasets) > 1){
     dataset <- datasets[[args$dataset]]  
   } else {
     dataset <- datasets[[1]]
@@ -44,9 +44,8 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
       ellab <- paste0("element",i)
       label <- paste0("label",i)
       value <- args$interactive_vals[[i]]
-      
       column_data <- dataset[, args$interactive[[varlab]]]
-      
+
       if(args$interactive[[ellab]] == "selectInput"){
         el <- shinyWidgets::pickerInput(ns(paste0("interactive_", i)), 
                                         label = args$interactive[[label]],
@@ -119,7 +118,7 @@ widget <- function(input, output, session, id_copy, args, datasets){
   
 
   # Find dataset based on saved setting, OR, if only one dataset provided, use it.
-  if(length(args$dataset) > 1){
+  if(length(datasets) > 1){
     dataset <- datasets[[args$dataset]]  
   } else {
     dataset <- datasets[[1]]
@@ -127,7 +126,7 @@ widget <- function(input, output, session, id_copy, args, datasets){
   
   # Set values for the interactive elements
   interactive_vals <- reactive(list(input$interactive_1, input$interactive_2))
-
+  
   # Render plot
   output$widget_plot <- renderPlot({
 
