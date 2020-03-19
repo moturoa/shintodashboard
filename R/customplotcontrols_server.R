@@ -40,16 +40,18 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
                       choices = cols, selected = args$groupvar)  
     
     
-    
-    updateSelectInput(session, "ia_select_variable1",
-                      choices = cols)
-    updateSelectInput(session, "ia_select_variable2",
-                      choices = cols)
-    
-    updateSelectInput(session, "il_select_variable1",
-                      choices = cols)
-    updateSelectInput(session, "il_select_variable2",
-                      choices = cols)
+    if(is.null(args)){
+      updateSelectInput(session, "ia_select_variable1",
+                        choices = cols)
+      updateSelectInput(session, "ia_select_variable2",
+                        choices = cols)
+      
+      updateSelectInput(session, "il_select_variable1",
+                        choices = cols)
+      updateSelectInput(session, "il_select_variable2",
+                        choices = cols)
+      
+    }
     
     
   })
@@ -231,7 +233,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
       bar_position = input$bar_position,
       statfun = input$plot_stat,
       
-      pietype = input$pietype,
+      pietype = "Pie", #input$pietype,
       pienarm = input$pienarm,
       
       xvar = as.character(input$plot_xvar),
@@ -449,10 +451,9 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   
   observeEvent(input$plot_type, {
     
-    if(input$plot_type %in% c("Barplot", "Stacked barplot") ){
+    if(input$plot_type == "Barplot"){
       shinyjs::show("plot_stat")
       shinyjs::hide("scatter_shape")
-      shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
       shinyjs::show("chk_usegroup")
       shinyjs::show("barannotation_controls")
@@ -461,7 +462,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     if(input$plot_type == "Scatter"){
       shinyjs::hide("plot_stat")
       shinyjs::show("scatter_shape")
-      shinyjs::hide("pietype")
+      #shinyjs::hide("pietype")
       shinyjs::hide("pienarm")
       shinyjs::show("chk_usegroup")
       shinyjs::hide("barannotation_controls")
@@ -470,7 +471,7 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     if(input$plot_type == "Pie chart"){
       shinyjs::hide("plot_stat")
       shinyjs::hide("scatter_shape")
-      shinyjs::show("pietype")
+      #shinyjs::show("pietype")
       shinyjs::show("pienarm")
       shinyjs::hide("chk_usegroup")
       shinyjs::hide("barannotation_controls")

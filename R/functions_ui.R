@@ -49,8 +49,10 @@ interactive_panel <- function(i, ns, columns, args = NULL){
 
 datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
 
+  
+  
+  
   if(!is.null(args)){
-    
     if(i > length(args)){
       args <- NULL
     } else {
@@ -81,7 +83,7 @@ datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
              shinyWidgets::pickerInput(ns(glue("il_select_values{i}")), 
                                        "Selecteer",
                                        width = 300,
-                                       choices = choices,
+                                       choices = as.character(choices),
                                        selected = args$value,
                                        multiple = TRUE,
                                        options = list(`actions-box` = TRUE,

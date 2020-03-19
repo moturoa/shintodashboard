@@ -11,7 +11,8 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
   }
   
   color_palettes <- c(tools::file_path_sans_ext(dir("cache/palettes", pattern = "[.]json$")), 
-                      "rich.colors", rownames(brewer.pal.info))
+                      "rich.colors", 
+                      rownames(brewer.pal.info))
   
   if(!is.null(args)){
     dataset <- datasets[[args$dataset]]  
@@ -35,6 +36,9 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
     fluidRow(
 
             tabBox( id = ns("controls_tab_box"), width = 12, 
+                    
+
+#----- 1. Start ------
                 tabPanel("1. Start", value = "start",
                 
                      tagList(
@@ -53,16 +57,14 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                                    choices = c("Barplot", "Scatter", "Pie chart"),
                                    selected = make_default("plottype", "Barplot")),
                        
-                       shinyjs::hidden(
                          
-                         awesomeRadio(ns("bar_position"), 
-                                      label_tooltip("Layout van deel bars",
-                                                    "Voor een barplot, de positie van de delen: boven op elkaar (stacked) of naast elkaar"),
-                                      choices = c("Stacked","Grouped"),
-                                      selected = make_default("bar_position", "Stacked"), 
-                                      inline = TRUE)
+                       awesomeRadio(ns("bar_position"), 
+                                    label_tooltip("Layout van deel bars",
+                                                  "Voor een barplot, de positie van de delen: boven op elkaar (stacked) of naast elkaar"),
+                                    choices = c("Stacked","Grouped"),
+                                    selected = make_default("bar_position", "Stacked"), 
+                                    inline = TRUE),
                          
-                       ),
                        
                        shinyjs::hidden(
                          
@@ -75,14 +77,14 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                          
                        ),
                        
-                       shinyjs::hidden(
-                         awesomeRadio(ns("pietype"), 
-                                      label_tooltip("Pie chart type", 
-                                                    "Soort pie chart. Alleen Pie mogelijk op het moment."),
-                                      choices = c("Pie","Waffle"),
-                                      selected = make_default("pietype", "Pie"),
-                                      inline = TRUE)
-                       ),
+                       # shinyjs::hidden(
+                       #   awesomeRadio(ns("pietype"), 
+                       #                label_tooltip("Pie chart type", 
+                       #                              "Soort pie chart. Alleen Pie mogelijk op het moment."),
+                       #                choices = c("Pie","Waffle"),
+                       #                selected = make_default("pietype", "Pie"),
+                       #                inline = TRUE)
+                       # ),
                        shinyjs::hidden(
                          checkboxInput(ns("pienarm"), 
                                        "Missende waarden weghalen.", 
@@ -92,6 +94,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                      )
                        
                 ),       
+#----- 2. Kolommen ------
                 tabPanel("2. Kolommen", value = "kolommen",
                      
                          
@@ -152,7 +155,7 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                      )
                        
                 ),
-                
+#----- 3. Filters ------
                 tabPanel("3. Filter", value = "filter",
 
                          tagList(
@@ -180,7 +183,8 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
 
                 ),
                 
-                tabPanel("3. Interactief", value = "interactief",
+#----- 4. Interactief ------
+                tabPanel("4. Interactief", value = "interactief",
                          
                      tagList(
                        tags$p("Selecteer het aantal interactieve filters voor de plot."),
@@ -204,7 +208,9 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                      )
                        
                 ),
-                tabPanel("4. Labels", value = "labels",
+
+#----- 5. Labels ------
+                tabPanel("5. Labels", value = "labels",
                          
                          fluidRow(    
                            column(4,    
@@ -269,11 +275,11 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                      
                 ),
                 
-
-                tabPanel("5. Annotatie", value = "annotatie",
+#----- 6. Annotaties ------
+                tabPanel("6. Annotatie", value = "annotatie",
                       
                          tagList(
-                           shinyjs::hidden(
+                           
                              tags$div(id = ns("barannotation_controls"),
                                       tags$h4("Annotatie voor bars"),
                                       checkboxInput(ns("check_annotate_bars"), 
@@ -281,8 +287,8 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                                                                   "Voegt een label toe per bar met de totale waarde"),
                                                     value = make_default("annotate_bars", FALSE)),
                                       tags$hr()
-                             )
-                           ),
+                             ),
+                           
                            
                            tags$h4("Rechte lijnen"),
                            selectInput(ns("select_annotation"),
@@ -293,7 +299,6 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                                                    "Verticale lijn" = "Vertical line"),
                                        selected = make_default("annotation_type", "None")
                                        ),
-                           shinyjs::hidden(
                              tags$div(id = ns("abline_controls"),
                                       numericInput(ns("num_line_coordinate"), "X-as waarde:", 
                                                    value = make_default("line_coordinate", 0), 
@@ -304,10 +309,11 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                                                                          value = make_default("line_colour","red"))
                                       )
                              )
-                           )
+                           
                          )
                          
                 ),
+#----- 7. Kleuren ------
                 tabPanel("6. Kleuren", value = "kleuren",
                          
                      fluidRow(
@@ -361,24 +367,6 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                       
                 )
  
-                # tabPanel(tagList(icon("play"), "Voltooien"), value = "voltooien",
-                #          
-                #      tags$p("Maak de plot aan volgens de huidige instellingen.",
-                #             "De plot wordt op het dashboard geplaatst."),
-                #      tags$br(),
-                #      actionButton(ns("btn_addplot"), 
-                #                   label_tooltip("Plot maken","Voeg huidige plot toe aan dashboard."), 
-                #                   class = "btn btn-primary", 
-                #                   icon = icon("plus", lib = "glyphicon")),
-                #      shinyjs::hidden(
-                #        actionButton(ns("btn_updateplot"), 
-                #                     label_tooltip("Plot updaten", "Geselecteerde plot updaten."), 
-                #                     class = "btn btn-primary", 
-                #                     icon = icon("refresh", lib = "glyphicon"))
-                #      )
-                # ),
-                
-                
                 
               )
               
