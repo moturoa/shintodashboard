@@ -49,7 +49,7 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
       if(args$interactive[[ellab]] == "selectInput"){
         el <- shinyWidgets::pickerInput(ns(paste0("interactive_", i)), 
                                         label = args$interactive[[label]],
-                                        choices = unique(column_data),
+                                        choices = sort(unique(column_data)),
                                         selected = if(is_empty(value)) unique(column_data) else value,
                                         multiple = TRUE,
                                         options = list(`actions-box` = TRUE,
