@@ -10,7 +10,12 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     plot_settings = NULL
   )
   
-  # Datasets
+  
+  filters <- read_filters(args)
+  
+
+  
+  
   
   # Update keuze menu.
   updateSelectInput(session, "select_dataset", 
@@ -28,6 +33,8 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     names(current_dataset())
   })
 
+  
+  
   observeEvent(current_available_columns(), {
     
     cols <- current_available_columns()
@@ -38,46 +45,73 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
                       choices = cols, selected = args$yvar)
     updateSelectInput(session, "plot_groupvar", 
                       choices = cols, selected = args$groupvar)  
+
+    updateSelectInput(session, "ia_select_variable1",
+                      choices = cols)
+    updateSelectInput(session, "ia_select_variable2",
+                      choices = cols)
     
+    updateSelectInput(session, "il_select_variable1",
+                      choices = cols,
+                      selected = if(length(filters)>0)filters[[1]]$column else NULL)
     
-    if(is.null(args)){
-      updateSelectInput(session, "ia_select_variable1",
-                        choices = cols)
-      updateSelectInput(session, "ia_select_variable2",
-                        choices = cols)
-      
-      updateSelectInput(session, "il_select_variable1",
-                        choices = cols)
-      updateSelectInput(session, "il_select_variable2",
-                        choices = cols)
-      
-    }
+    updateSelectInput(session, "il_select_variable2",
+                      choices = cols,
+                      selected = if(length(filters)>1)filters[[2]]$column else NULL)
     
+
     
   })
   
   
-  observe({
+
+  
+  
+  observeEvent(input$il_select_variable1,  {
 
     sel <- input$il_select_variable1
     req(sel)
+    
     dat <- current_dataset()[[sel]]
+    
+    selected <- sort(unique(dat))
+    if(length(filters) > 0){
+      if(sel == filters[[1]]$column){
+        
+        selected <- filters[[1]]$value
+        
+      }
+    }
+    
     updatePickerInput(session, "il_select_values1",
                       choices = sort(unique(dat)),
-                      selected = sort(unique(dat)))
+                      selected = selected)
 
   })
 
-  observe({
-
+ 
+  observeEvent(input$il_select_variable2,  {
+    
     sel <- input$il_select_variable2
     req(sel)
+    
     dat <- current_dataset()[[sel]]
+    
+    selected <- sort(unique(dat))
+    if(length(filters) > 1){
+      if(sel == filters[[2]]$column){
+        
+        selected <- filters[[2]]$value
+        
+      }
+    }
+    
     updatePickerInput(session, "il_select_values2",
                       choices = sort(unique(dat)),
-                      selected = sort(unique(dat)))
-
+                      selected = selected)
+    
   })
+  
   
   # Data filter toevoegen
   # observeEvent(input$btn_add_filter, {
@@ -513,13 +547,13 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
     
   })
   
-  observeEvent(input$btn_save_dashboard, {
-    
-    save_dashboard(rv$plot_settings[input$customplotids], input$txt_dashboard_name)
-    
-    updateSelectInput(session, "select_dashboard", 
-                      choices = list_dashboards())
-  })
+  # observeEvent(input$btn_save_dashboard, {
+  #   
+  #   save_dashboard(rv$plot_settings[input$customplotids], input$txt_dashboard_name)
+  #   
+  #   updateSelectInput(session, "select_dashboard", 
+  #                     choices = list_dashboards())
+  # })
   
   clear_dashboard <- function(){
     ids <- paste0("#", names(rv$plot_settings))
@@ -532,19 +566,19 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   }
   
   
-  observeEvent(input$btn_load_dashboard,{
-    
-    clear_dashboard()
-    
-    thisdash <- input$select_dashboard
-    
-    dash <- load_dashboard(thisdash)
-    
-    for(i in seq_along(out)){
-      insert_widget(args = dash[[i]], datasets = datasets)
-    }
-    
-  })
+  # observeEvent(input$btn_load_dashboard,{
+  #   
+  #   clear_dashboard()
+  #   
+  #   thisdash <- input$select_dashboard
+  #   
+  #   dash <- load_dashboard(thisdash)
+  #   
+  #   for(i in seq_along(out)){
+  #     insert_widget(args = dash[[i]], datasets = datasets)
+  #   }
+  #   
+  # })
   
   
   
@@ -633,28 +667,28 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   # }
   
   # Button: plot maken
-  observeEvent(input$btn_addplot, {
-  
-    ok <- TRUE
-    
-    if(is_empty(input$plot_xvar)){
-      fleetingMessage("Selecteer een variabele voor de X-as.", status = "danger")
-      updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
-      ok <- FALSE
-    }
-    if(is_empty(input$plot_yvar)){
-      fleetingMessage("Selecteer een variabele voor de Y-as.", status = "danger")
-      updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
-      ok <- FALSE
-    }
-    
-    if(ok){
-      add_widget()
-      shinyjs::hide("btn_updateplot")  
-    }
-    
-    
-  })
+  # observeEvent(input$btn_addplot, {
+  # 
+  #   ok <- TRUE
+  #   
+  #   if(is_empty(input$plot_xvar)){
+  #     fleetingMessage("Selecteer een variabele voor de X-as.", status = "danger")
+  #     updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
+  #     ok <- FALSE
+  #   }
+  #   if(is_empty(input$plot_yvar)){
+  #     fleetingMessage("Selecteer een variabele voor de Y-as.", status = "danger")
+  #     updateTabsetPanel(session, "controls_tab_box", selected = "kolommen")
+  #     ok <- FALSE
+  #   }
+  #   
+  #   if(ok){
+  #     add_widget()
+  #     shinyjs::hide("btn_updateplot")  
+  #   }
+  #   
+  #   
+  # })
   
   # # Button: update plot
   # observeEvent(input$btn_updateplot, {

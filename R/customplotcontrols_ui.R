@@ -30,6 +30,12 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
     }
   }
   
+  
+  filters <- read_filters(args)
+  
+  count_filters <- function(x){
+    length(filters)
+  }
 
   
   out <- fluidPage(
@@ -164,20 +170,20 @@ customplotcontrolsUI <- function(id, args = NULL, data_key = NULL, datasets){
                            awesomeRadio(ns("il_select_nelements"),
                                         "Aantal data filters",
                                         choices = c("0","1","2"),
-                                        selected = if(!is.null(args$filters))as.character(length(args$filters)) else "0",
+                                        selected = as.character(count_filters(args)),
                                         inline = TRUE),
                            
                            shinyjs::hidden(
                              datafilter_panel(1, ns, 
                                               columns = names(dataset), 
                                               data = dataset,
-                                              args = args$filters)
+                                              args = if(length(filters)>0)filters[[1]] else NULL)
                            ),
                            shinyjs::hidden(
                              datafilter_panel(2, ns,
                                               columns = names(dataset),
                                               data = dataset,
-                                              args = args$filters)
+                                              args = if(length(filters)>1)filters[[2]] else NULL)
                            )
                          )
 

@@ -47,22 +47,28 @@ interactive_panel <- function(i, ns, columns, args = NULL){
 }
 
 
-datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
-
+read_filters <- function(args){
   
-  
-  
-  if(!is.null(args)){
-    if(i > length(args)){
-      args <- NULL
-    } else {
-      args <- args[[i]]
+  filters <- args$filters
+  if(!is.null(filters)){
+    
+    if(is.data.frame(filters)){
+      
+      filters <- split(args$filters, 1:nrow(args$filters))
+      filters <- lapply(filters, function(x)lapply(x, unlist))
+      
     }
     
   }
   
-  if(!is.null(args)){
+  return(filters)
+}
 
+
+datafilter_panel <- function(i, ns, columns, data = NULL, args = NULL){
+
+  
+  if(!is.null(args)){
     choices <- sort(unique(data[[args$column]]))
   } else {
     choices <- NULL
