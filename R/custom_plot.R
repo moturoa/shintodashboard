@@ -21,6 +21,7 @@ custom_plot <- function(plotarguments, data, interactive){
   if(!is.null(a$factor_x) && a$factor_x){
     data[,a$xvar] <- as.factor(data[,a$xvar])
   }
+  
   if(!is.null(a$factor_y) && a$factor_y) {
     data[,a$yvar] <- as.factor(data[,a$yvar])
   }
@@ -37,10 +38,14 @@ custom_plot <- function(plotarguments, data, interactive){
     } else if(class %in% c("character","factor")){
 
       data <- dplyr::filter(data, !!sym(column) %in% value)
+      
+      data[[column]] <- factor(data[[column]], levels = value)
+      
     }
 
   return(data)
   }
+
 
   # if all filters are NULL, JSON makes it an empty dataframe instead of a null list
   if((is.data.frame(a$filters) && ncol(a$filters) == 0) || is.null(a$filters)){
