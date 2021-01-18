@@ -14,9 +14,6 @@ customplotcontrols <- function(input, output, session, data_key, datasets, args 
   filters <- read_filters(args)
   
 
-  
-  
-  
   # Update keuze menu.
   updateSelectInput(session, "select_dataset", 
                     choices = data_key,

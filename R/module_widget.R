@@ -44,7 +44,8 @@ widgetUI <- function(id, args, datasets, buttons = c("close","edit"),
       ellab <- paste0("element",i)
       label <- paste0("label",i)
       value <- args$interactive_vals[[i]]
-      column_data <- dataset[, args$interactive[[varlab]]]
+      column_data <- dataset %>%
+        pull(!!sym(args$interactive[[varlab]]))
 
       if(args$interactive[[ellab]] == "selectInput"){
         el <- shinyWidgets::pickerInput(ns(paste0("interactive_", i)), 

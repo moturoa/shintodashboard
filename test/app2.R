@@ -12,7 +12,6 @@ fns <- dir("../R", full.names=TRUE)
 for(z in fns)source(z)
 
 library(RColorBrewer)
-library(shintoplotwrappers)
 library(ggplot2)
 library(ggthemes)
 
@@ -95,7 +94,10 @@ server <- function(input, output, session) {
   
   output$ui_controls <- renderUI({
     input$reset_settings
-    customplotcontrolsUI("controls", args = w_edit(), data_key = datasets_key, datasets = datasets_content)
+    customplotcontrolsUI("controls", 
+                         args = w_edit(), 
+                         data_key = datasets_key, 
+                         datasets = datasets_content)
   })
   
   .settings <<- insert_saved_widgets(dash, 
@@ -120,7 +122,10 @@ server <- function(input, output, session) {
 
   observeEvent(input$save_dash, {
     
-    session$sendCustomMessage("plotsdashboard", list(shiny_id = session$ns("visibleplots") ))
+    session$sendCustomMessage("plotsdashboard", 
+                              list(shiny_id = session$ns("visibleplots"),
+                                   placeholder = "placeholder"
+                                   ))
     
   })
   

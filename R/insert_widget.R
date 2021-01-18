@@ -11,7 +11,7 @@ insert_widget <- function(id,
                                       margin = 10, padding = 25, 
                                       padding_bottom = 100)
                           ){
-  
+
   ui <- widgetUI(id, args = args, 
                  datasets = datasets, 
                  buttons = buttons,

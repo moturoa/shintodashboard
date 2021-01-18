@@ -1,9 +1,10 @@
 
-
+library(shintodashboard)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(DT)
-
+library(shinyjs)
+library(shinyjqui)
 
 if(!dir.exists("cache"))dir.create("cache")
 if(!dir.exists("cache/palettes"))dir.create("cache/palettes")
