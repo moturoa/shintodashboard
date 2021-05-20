@@ -1,5 +1,5 @@
 is_empty <- function(x){
-  all(is.null(x) || as.character(x) == "" || length(x) == 0)
+  all(is.null(x) | as.character(x) == "" | length(x) == 0)
 }
 
 
