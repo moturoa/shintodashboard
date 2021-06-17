@@ -4,7 +4,13 @@
 \alias{insert_saved_widgets}
 \title{Loads all widgets from a JSON}
 \usage{
-insert_saved_widgets(dash, datasets, buttons = "", ...)
+insert_saved_widgets(
+  dash,
+  datasets,
+  buttons = "",
+  session = getDefaultReactiveDomain(),
+  ...
+)
 }
 \description{
 Loads all widgets from a JSON

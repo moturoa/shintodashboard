@@ -12,7 +12,8 @@ insert_widget(
   where = "beforeEnd",
   buttons = c("close", "edit"),
   size = list(width = 500, height = 450, margin = 10, padding = 25, padding_bottom =
-    100)
+    100),
+  session
 )
 }
 \description{

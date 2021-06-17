@@ -9,10 +9,12 @@ insert_widget <- function(id,
                           buttons = c("close","edit"),
                           size = list(width = 500, height = 450, 
                                       margin = 10, padding = 25, 
-                                      padding_bottom = 100)
+                                      padding_bottom = 100),
+                          session
                           ){
 
-  ui <- widgetUI(id, args = args, 
+  ui <- widgetUI(session$ns(id), 
+                 args = args, 
                  datasets = datasets, 
                  buttons = buttons,
                  widget_size = size)
@@ -29,7 +31,7 @@ insert_widget <- function(id,
 
 #' Loads all widgets from a JSON
 #'@export
-insert_saved_widgets <- function(dash, datasets, buttons = "", ...){
+insert_saved_widgets <- function(dash, datasets, buttons = "", session = getDefaultReactiveDomain(), ...){
   
   if(is.character(dash))dash <- jsonlite::fromJSON(dash)
 
@@ -37,7 +39,7 @@ insert_saved_widgets <- function(dash, datasets, buttons = "", ...){
 
   for(i in seq_along(dash)){
     new_id <- uuid::UUIDgenerate()
-    insert_widget(new_id, dash[[i]], datasets, buttons = buttons, ...)
+    insert_widget(new_id, dash[[i]], datasets, buttons = buttons, session = session, ...)
     settings[[new_id]] <- dash[[i]]
   }
   
