@@ -153,8 +153,8 @@ custom_plot <- function(plotarguments, data, interactive){
 
   # Colors, themes, text formatting
   p <- p +
-    ggplot2::scale_fill_manual(values = rep(pal,100)) +
-    ggplot2::scale_color_manual(values = rep(pal,100)) +
+    ggplot2::scale_fill_manual(values = rep(pal,100), name = NULL) +
+    ggplot2::scale_color_manual(values = rep(pal,100), name = NULL) +
     mytheme(base_size = a$labelsize) +
     ggplot2::theme(axis.title.x = element_text(margin = margin(t = a$labelmargin, r=0,b=0,l=0)),
                    axis.title.y = element_text(margin = margin(t = 0, r=a$labelmargin, b=0,l=0)),
